@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.sites-runtime/
+.env
+.env.local
+.DS_Store
+
+# Local design-review artifacts
+AGENTS.md
+design-qa.md
+design-reference.png
+implementation-*.jpg
+implementation-*.png
+qa-*.jpg
+qa-*.png
