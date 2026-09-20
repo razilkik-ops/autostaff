@@ -1,0 +1,8 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<main class="content-hub layout-container">
+  <div class="breadcrumbs"><a href="/">Главная</a><span>/</span><span><%= type === 'blog' ? 'Блог' : 'Новости' %></span></div>
+  <header class="hub-heading"><span><%= type === 'blog' ? '▤ Практика и технологии' : '▰ События и обновления' %></span><h1><%= heading %></h1><p><%= lead %></p></header>
+  <div class="article-grid hub-grid"><% articles.forEach(article => { %><%- include('partials/article-card', { article }) %><% }) %></div>
+</main>
+<%- include('partials/footer') %>

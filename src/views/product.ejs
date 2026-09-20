@@ -1,0 +1,12 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<main class="product-page layout-container">
+  <div class="breadcrumbs"><a href="/">Главная</a><span>/</span><a href="/#catalog">Каталог</a><span>/</span><span><%= product.shortName %></span></div>
+  <div class="product-detail">
+    <div class="product-gallery"><img src="<%= product.image %>" alt="<%= product.name %>" /></div>
+    <section class="product-info"><span class="product-brand"><%= product.brand %></span><h1><%= product.name %></h1><div class="product-meta"><span>★★★★★</span><span>Артикул: <%= product.sku %></span></div><p class="detail-description"><%= product.description %></p><div class="stock"><%= product.stock > 0 ? '✓ В наличии' : 'Нет в наличии' %></div><div class="buy-box"><strong><%= formatMoney(product.price) %></strong><button type="button" class="add-detail add-to-cart" data-product-id="<%= product.id %>" data-product-name="<%= product.name %>" data-product-price="<%= Number(product.price) %>" data-product-image="<%= product.image %>" <%= product.stock < 1 ? 'disabled' : '' %>>🛒 Добавить в корзину</button></div><div class="detail-benefits"><div>▣<span><b>Доставка по России</b><small>Срок рассчитает менеджер</small></span></div><div>♢<span><b>Гарантия качества</b><small>Возврат в течение 14 дней</small></span></div></div></section>
+  </div>
+  <section class="product-description"><div><h2>О товаре</h2><p><%= product.description %></p></div><div><h2>Характеристики</h2><dl><% (Array.isArray(product.specs) ? product.specs : []).forEach(spec => { %><div><dt><%= spec[0] %></dt><dd><%= spec[1] %></dd></div><% }) %></dl></div></section>
+  <% if (related.length) { %><section class="related"><div class="section-title-row"><h2>С этим товаром покупают</h2><a href="/#catalog">Весь каталог →</a></div><div class="related-grid"><% related.forEach(item => { %><%- include('partials/product-card', { product: item }) %><% }) %></div></section><% } %>
+</main>
+<%- include('partials/footer') %>

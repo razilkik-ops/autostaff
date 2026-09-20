@@ -1,0 +1,41 @@
+<footer id="contacts">
+  <div class="footer-main">
+    <div class="layout-container footer-main-inner">
+      <div class="footer-brand"><a class="brand" href="/"><span class="brand-mark">S</span><span><b>SGCB<span> PRO</span></b><small>PROFESSIONAL DETAILING</small></span></a><p>Профессиональная автохимия, оборудование и аксессуары SGCB для детейлинг-центров, автомоек и частных мастеров.</p></div>
+      <div><h3>Каталог</h3><a href="/#catalog">Автохимия</a><a href="/#catalog">Инструмент</a><a href="/#catalog">Аксессуары</a><a href="/#catalog">Оборудование</a><a href="/#catalog">Защитные плёнки</a></div>
+      <div><h3>Покупателю</h3><a href="/info/delivery">Доставка и оплата</a><a href="/info/questions">Вопросы</a><a href="/info/returns">Возврат и обмен</a><a href="/info/privacy">Политика конфиденциальности</a><a href="/info/about">О компании</a></div>
+      <div class="contacts"><h3>Контакты</h3><p>☎ <a href="tel:+79807519996">+7 980 751-99-96 · телефон / MAX</a></p><p>➤ <a href="https://t.me/CEO_ALLSTARS" target="_blank" rel="noreferrer">Telegram: @CEO_ALLSTARS</a></p><p>✉ <a href="mailto:allstars-import@yandex.ru">allstars-import@yandex.ru</a></p><p>● г. Владимир, пр-т Строителей, 9Б</p><p>◷ Ежедневно: 10:00–21:00</p></div>
+    </div>
+  </div>
+  <div class="footer-bottom"><div class="layout-container footer-bottom-inner"><span>© 2026 SGCB Russia. Все права защищены.</span><a href="/info/privacy">Политика конфиденциальности</a></div></div>
+</footer>
+
+<div class="overlay hidden" data-cart-overlay>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+    <div class="drawer-head"><div><span>Ваш заказ</span><h2 id="cart-title">Корзина</h2></div><button type="button" data-cart-close aria-label="Закрыть">×</button></div>
+    <div class="cart-lines" data-cart-lines></div>
+    <div class="cart-summary" data-cart-summary>
+      <div class="total"><b>Итого</b><strong data-cart-total>0 ₽</strong></div>
+      <button type="button" data-checkout-open>Оформить заказ →</button>
+    </div>
+  </aside>
+</div>
+
+<div class="overlay checkout-overlay hidden" data-checkout-overlay>
+  <section class="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+    <div class="drawer-head"><div><span>Остался один шаг</span><h2 id="checkout-title">Оформление заказа</h2></div><button type="button" data-checkout-close aria-label="Закрыть">×</button></div>
+    <form data-checkout-form>
+      <label>Ваше имя<input name="customerName" required maxlength="80" value="<%= user?.name || '' %>" placeholder="Алексей" /></label>
+      <label>Телефон<input name="phone" type="tel" required maxlength="32" placeholder="+7 900 000-00-00" /></label>
+      <label>E-mail<input name="email" type="email" maxlength="254" value="<%= user?.email || '' %>" placeholder="mail@example.ru" /></label>
+      <label>Способ получения<select name="delivery"><option>Доставка по России</option><option>Самовывоз во Владимире</option></select></label>
+      <label>Комментарий<textarea name="comment" maxlength="600" placeholder="Детали заказа"></textarea></label>
+      <p class="form-error hidden" data-checkout-error></p>
+      <button class="submit-order">Отправить заказ →</button>
+    </form>
+  </section>
+</div>
+<div class="toast hidden" data-toast></div>
+<script src="/js/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<article class="product-card">
+  <a class="product-link" href="/product/<%= product.slug %>">
+    <img src="<%= product.image %>" alt="<%= product.name %>" />
+    <span class="product-brand"><%= product.brand %></span>
+    <h3><%= product.name %></h3>
+  </a>
+  <div class="rating" aria-label="Рейтинг 5 из 5"><span>★★★★★</span></div>
+  <div class="product-bottom">
+    <b><%= formatMoney(product.price) %></b>
+    <button type="button" class="add-to-cart" data-product-id="<%= product.id %>" data-product-name="<%= product.name %>" data-product-price="<%= Number(product.price) %>" data-product-image="<%= product.image %>" aria-label="Добавить в корзину">🛒</button>
+  </div>
+</article>

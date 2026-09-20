@@ -1,0 +1,5 @@
+<%- include('partials/head') %>
+<div class="admin-page-head"><div><span>Панель управления</span><h1>Обзор магазина</h1></div></div>
+<div class="admin-stats"><a href="/admin/products"><span>Товары</span><strong><%= counts.products %></strong></a><a href="/admin/articles"><span>Материалы</span><strong><%= counts.articles %></strong></a><a href="/admin/comments"><span>Комментарии</span><strong><%= counts.comments %></strong></a><a href="/admin/orders"><span>Новые заказы</span><strong><%= counts.orders %></strong></a><div><span>Пользователи</span><strong><%= counts.users %></strong></div></div>
+<section class="admin-welcome"><h2>Управление SGCB</h2><p>Здесь можно обновлять каталог, публиковать статьи и новости, модерировать комментарии зарегистрированных пользователей и обрабатывать заказы.</p><div><a href="/admin/products/new">+ Добавить товар</a><a href="/admin/articles/new">+ Создать материал</a></div></section>
+<%- include('partials/foot') %>

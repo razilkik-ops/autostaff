@@ -1,0 +1,9 @@
+<article class="article-card">
+  <a class="article-card-image" href="<%= articlePath(article) %>"><img src="<%= article.heroImage %>" alt="" /></a>
+  <div class="article-card-body">
+    <span class="article-kind"><%= article.type === 'BLOG' ? 'Блог' : 'Новости' %></span>
+    <a class="article-title" href="<%= articlePath(article) %>"><h3><%= article.title %></h3></a>
+    <p><%= article.description %></p>
+    <div><span><%= formatDate(article.publishedAt) %></span><span>♥ <%= article._count?.likes || 0 %> · 💬 <%= article._count?.comments || 0 %></span></div>
+  </div>
+</article>

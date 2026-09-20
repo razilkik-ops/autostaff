@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ArticleType {
+  BLOG
+  NEWS
+}
+
+enum CommentStatus {
+  VISIBLE
+  HIDDEN
+}
+
+enum OrderStatus {
+  NEW
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(USER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+  likes        Like[]
+  comments     Comment[]
+  articles     Article[] @relation("ArticleAuthor")
+  orders       Order[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  shortName   String
+  slug        String      @unique
+  brand       String      @default("SGCB")
+  sku         String      @unique
+  description String
+  price       Decimal     @db.Decimal(12, 2)
+  image       String
+  stock       Int         @default(0)
+  published   Boolean     @default(true)
+  specs       Json?
+  categoryId  String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  articles    Article[]
+  orderItems  OrderItem[]
+
+  @@index([categoryId, published])
+  @@index([createdAt])
+}
+
+model Article {
+  id          String      @id @default(cuid())
+  type        ArticleType
+  title       String
+  slug        String      @unique
+  description String
+  body        String
+  heroImage   String
+  videoUrl    String?
+  published   Boolean     @default(false)
+  publishedAt DateTime?
+  authorId    String?
+  productId   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  author      User?       @relation("ArticleAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  product     Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  likes       Like[]
+  comments    Comment[]
+
+  @@index([type, published, publishedAt])
+  @@index([productId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([articleId])
+}
+
+model Comment {
+  id        String        @id @default(cuid())
+  body      String
+  status    CommentStatus @default(VISIBLE)
+  userId    String
+  articleId String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article   Article       @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, status, createdAt])
+  @@index([userId])
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  number       String      @unique
+  userId       String?
+  customerName String
+  phone        String
+  email        String?
+  delivery     String
+  comment      String?
+  total        Decimal     @db.Decimal(12, 2)
+  status       OrderStatus @default(NEW)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items        OrderItem[]
+
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String?
+  productName String
+  price       Decimal  @db.Decimal(12, 2)
+  quantity    Int
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+}

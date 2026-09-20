@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.env
+.env.*
+npm-debug.log*
+design-qa.md
+design-reference.png
+implementation-*.jpg
+implementation-*.png
+qa-*.jpg
+qa-*.png
