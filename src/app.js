@@ -5,7 +5,7 @@ import express from "express";
 import helmet from "helmet";
 import methodOverride from "method-override";
 import { config as defaultConfig } from "./config.js";
-import { articlePath, formatDate, formatDateTime, formatMoney, paragraphs, specsToText } from "./lib/format.js";
+import { articlePath, formatDate, formatDateTime, formatMoney, imagesToText, paragraphs, specsToText } from "./lib/format.js";
 import { csrfMiddleware, requireCsrf, sessionMiddleware } from "./lib/security.js";
 import { adminRoutes } from "./routes/admin.js";
 import { authRoutes } from "./routes/auth.js";
@@ -53,7 +53,9 @@ export function createApp({ db, config = defaultConfig }) {
     res.locals.articlePath = articlePath;
     res.locals.paragraphs = paragraphs;
     res.locals.specsToText = specsToText;
+    res.locals.imagesToText = imagesToText;
     res.locals.siteUrl = config.appUrl;
+    res.locals.canonicalUrl = new URL(req.path, config.appUrl).href;
     next();
   });
   app.use(requireCsrf);

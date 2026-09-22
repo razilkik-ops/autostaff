@@ -53,6 +53,40 @@ test("регистрация, сессия, лайки, комментарии, 
   assert.equal(health.status, 200);
   assert.deepEqual(await health.json(), { status: "ok" });
 
+  const categories = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+  assert.equal(categories.length, 6, "в каталоге должно быть шесть SEO-категорий");
+  const homePage = await request(baseUrl, jar, "/");
+  const homeHtml = await homePage.text();
+  assert.equal(homePage.status, 200);
+  assert.match(homeHtml, /ТОВАРЫ[\s\S]*ДЛЯ ДЕТЕЙЛИНГА/);
+  assert.match(homeHtml, new RegExp(product.name));
+  assert.doesNotMatch(homeHtml, /<div[^>]+id=["']root["']/i, "SSR не должен отдавать пустой React-root");
+
+  for (const seoCategory of categories) {
+    const seoPage = await request(baseUrl, jar, `/catalog/${seoCategory.slug}`);
+    const seoHtml = await seoPage.text();
+    assert.equal(seoPage.status, 200);
+    assert.match(seoHtml, new RegExp(`<h1>${seoCategory.name}</h1>`));
+    assert.match(seoHtml, new RegExp(`/catalog/${seoCategory.slug}`));
+  }
+
+  const category = await prisma.category.findUnique({ where: { id: product.categoryId } });
+  const categoryPage = await request(baseUrl, jar, `/catalog/${category.slug}`);
+  const categoryHtml = await categoryPage.text();
+  assert.equal(categoryPage.status, 200);
+  assert.match(categoryHtml, new RegExp(`<h1>${category.name}</h1>`));
+  assert.match(categoryHtml, /<link rel="canonical" href="[^\"]+\/catalog\//);
+  assert.match(categoryHtml, new RegExp(product.name));
+
+  const productPage = await request(baseUrl, jar, `/product/${product.slug}`);
+  const productHtml = await productPage.text();
+  assert.equal(productPage.status, 200);
+  assert.match(productHtml, new RegExp(`<h1>${product.name}</h1>`));
+  assert.ok((productHtml.match(/data-gallery-thumb/g) || []).length >= 3, "карточка товара должна содержать несколько фотографий");
+  assert.match(productHtml, /Характеристики/);
+  assert.match(productHtml, /С этим товаром покупают/);
+  assert.match(productHtml, /Доставка по России/);
+
   t.after(async () => {
     await prisma.like.deleteMany({ where: { user: { email } } });
     await prisma.comment.deleteMany({ where: { user: { email } } });

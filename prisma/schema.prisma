@@ -78,6 +78,7 @@ model Product {
   description String
   price       Decimal     @db.Decimal(12, 2)
   image       String
+  images      Json?
   stock       Int         @default(0)
   published   Boolean     @default(true)
   specs       Json?

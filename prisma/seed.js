@@ -5,21 +5,21 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 const categories = [
-  ["Экстерьер", "eksterer", "/assets/wash-mitt.png"],
-  ["Интерьер", "interer", "/assets/interior-brushes.png"],
-  ["Машинки для полировки", "polirovalnye-mashinki", "/assets/polishing-machine.png"],
-  ["Микрофибра", "mikrofibra", "/assets/drying-towel.png"],
-  ["Оборудование для детейлинга", "oborudovanie", "/assets/detailing-bucket.png"],
-  ["Защитные плёнки PPF", "ppf", "/assets/ppf-film.png"],
+  ["Экстерьер", "eksterer", "/assets/wash-mitt.png", "Профессиональные средства и аксессуары SGCB для безопасной мойки, очистки и защиты кузова автомобиля."],
+  ["Интерьер", "interer", "/assets/interior-brushes.png", "Кисти, щётки и автохимия SGCB для глубокой и бережной очистки салона автомобиля."],
+  ["Машинки для полировки", "polirovalnye-mashinki", "/assets/polishing-machine.png", "Полировальные машинки SGCB для коррекции лакокрасочного покрытия и профессионального детейлинга."],
+  ["Микрофибра", "mikrofibra", "/assets/drying-towel.png", "Микрофибровые полотенца SGCB для сушки, располировки составов, стёкол и ухода за интерьером."],
+  ["Оборудование для детейлинга", "oborudovanie", "/assets/detailing-bucket.png", "Профессиональное оборудование SGCB для детейлинг-центров, автомоек и частных мастеров."],
+  ["Защитные плёнки PPF", "ppf", "/assets/ppf-film.png", "Прозрачные защитные плёнки PPF для сохранения лакокрасочного покрытия от сколов и царапин."],
 ];
 
 const products = [
-  { slug: "drying-towel", category: "mikrofibra", name: "Сушащее полотенце G1500", shortName: "Полотенце G1500", sku: "SGCB-TWL-1500", price: 4990, image: "/assets/drying-towel.png", stock: 24, description: "Двустороннее микрофибровое полотенце быстро впитывает воду и не оставляет разводов на кузове.", specs: [["Размер", "60 × 90 см"], ["Плотность", "1500 г/м²"], ["Материал", "Микрофибра"], ["Цвет", "Графит"]] },
-  { slug: "detailing-bucket", category: "oborudovanie", name: "Ведро для мойки Detailing Lab 20L", shortName: "Ведро Detailing Lab 20L", sku: "SGCB-BKT-20", price: 2990, image: "/assets/detailing-bucket.png", stock: 18, description: "Прочное ведро с герметичной крышкой для безопасной и удобной ручной мойки автомобиля.", specs: [["Объём", "20 л"], ["Материал", "HDPE-пластик"], ["Крышка", "Герметичная"], ["Цвет", "Синий"]] },
-  { slug: "wash-mitt", category: "eksterer", name: "Варежка для мойки Carp Gliles Shine", shortName: "Варежка Carp Gliles Shine", sku: "SGCB-MITT-BL", price: 1990, image: "/assets/wash-mitt.png", stock: 40, description: "Мягкая варежка из шенилловой микрофибры бережно снимает загрязнения и сохраняет лакокрасочное покрытие.", specs: [["Материал", "Микрофибра"], ["Тип ворса", "Шенилл"], ["Размер", "24 × 18 см"], ["Цвет", "Синий"]] },
-  { slug: "polishing-machine", category: "polirovalnye-mashinki", name: "Полировальная машинка DA15", shortName: "Полировальная машинка DA15", sku: "SGCB-DA15", price: 24990, image: "/assets/polishing-machine.png", stock: 7, description: "Эксцентриковая полировальная машинка для безопасной коррекции лака и профессиональной работы в детейлинг-центре.", specs: [["Ход эксцентрика", "15 мм"], ["Мощность", "1000 Вт"], ["Подложка", "125 мм"], ["Гарантия", "12 месяцев"]] },
-  { slug: "interior-brushes", category: "interer", name: "Набор кистей для интерьера", shortName: "Кисти для интерьера", sku: "SGCB-BRUSH-5", price: 3490, image: "/assets/interior-brushes.png", stock: 32, description: "Пять мягких кистей разных размеров для безопасной очистки дефлекторов, кнопок, швов и других сложных зон салона.", specs: [["Количество", "5 шт."], ["Материал ворса", "Синтетика"], ["Рукоять", "Пластик"], ["Назначение", "Интерьер"]] },
-  { slug: "ppf-film", category: "ppf", name: "Защитная плёнка PPF Clear Pro", shortName: "Плёнка PPF Clear Pro", sku: "SGCB-PPF-15", price: 89900, image: "/assets/ppf-film.png", stock: 5, description: "Прозрачная полиуретановая плёнка с самовосстанавливающимся верхним слоем для защиты кузова от сколов и царапин.", specs: [["Ширина", "1,52 м"], ["Длина", "15 м"], ["Толщина", "190 мкм"], ["Гарантия", "7 лет"]] },
+  { slug: "drying-towel", category: "mikrofibra", name: "Сушащее полотенце G1500", shortName: "Полотенце G1500", sku: "SGCB-TWL-1500", price: 4990, image: "/assets/drying-towel.png", images: ["/assets/drying-towel.png", "/assets/promo-detailing.png", "/assets/sgcb-tools-banner.jpg"], stock: 24, description: "Двустороннее микрофибровое полотенце быстро впитывает воду и не оставляет разводов на кузове.", specs: [["Размер", "60 × 90 см"], ["Плотность", "1500 г/м²"], ["Материал", "Микрофибра"], ["Цвет", "Графит"]] },
+  { slug: "detailing-bucket", category: "oborudovanie", name: "Ведро для мойки Detailing Lab 20L", shortName: "Ведро Detailing Lab 20L", sku: "SGCB-BKT-20", price: 2990, image: "/assets/detailing-bucket.png", images: ["/assets/detailing-bucket.png", "/assets/promo-detailing.png", "/assets/sgcb-tools-banner.jpg"], stock: 18, description: "Прочное ведро с герметичной крышкой для безопасной и удобной ручной мойки автомобиля.", specs: [["Объём", "20 л"], ["Материал", "HDPE-пластик"], ["Крышка", "Герметичная"], ["Цвет", "Синий"]] },
+  { slug: "wash-mitt", category: "eksterer", name: "Варежка для мойки Carp Gliles Shine", shortName: "Варежка Carp Gliles Shine", sku: "SGCB-MITT-BL", price: 1990, image: "/assets/wash-mitt.png", images: ["/assets/wash-mitt.png", "/assets/hero-auto.png", "/assets/promo-detailing.png"], stock: 40, description: "Мягкая варежка из шенилловой микрофибры бережно снимает загрязнения и сохраняет лакокрасочное покрытие.", specs: [["Материал", "Микрофибра"], ["Тип ворса", "Шенилл"], ["Размер", "24 × 18 см"], ["Цвет", "Синий"]] },
+  { slug: "polishing-machine", category: "polirovalnye-mashinki", name: "Полировальная машинка DA15", shortName: "Полировальная машинка DA15", sku: "SGCB-DA15", price: 24990, image: "/assets/polishing-machine.png", images: ["/assets/polishing-machine.png", "/assets/sgcb-tools-banner.jpg", "/assets/hero-auto.png"], stock: 7, description: "Эксцентриковая полировальная машинка для безопасной коррекции лака и профессиональной работы в детейлинг-центре.", specs: [["Ход эксцентрика", "15 мм"], ["Мощность", "1000 Вт"], ["Подложка", "125 мм"], ["Гарантия", "12 месяцев"]] },
+  { slug: "interior-brushes", category: "interer", name: "Набор кистей для интерьера", shortName: "Кисти для интерьера", sku: "SGCB-BRUSH-5", price: 3490, image: "/assets/interior-brushes.png", images: ["/assets/interior-brushes.png", "/assets/sgcb-tools-banner.jpg", "/assets/promo-detailing.png"], stock: 32, description: "Пять мягких кистей разных размеров для безопасной очистки дефлекторов, кнопок, швов и других сложных зон салона.", specs: [["Количество", "5 шт."], ["Материал ворса", "Синтетика"], ["Рукоять", "Пластик"], ["Назначение", "Интерьер"]] },
+  { slug: "ppf-film", category: "ppf", name: "Защитная плёнка PPF Clear Pro", shortName: "Плёнка PPF Clear Pro", sku: "SGCB-PPF-15", price: 89900, image: "/assets/ppf-film.png", images: ["/assets/ppf-film.png", "/assets/hero-auto.png", "/assets/sgcb-tools-banner.jpg"], stock: 5, description: "Прозрачная полиуретановая плёнка с самовосстанавливающимся верхним слоем для защиты кузова от сколов и царапин.", specs: [["Ширина", "1,52 м"], ["Длина", "15 м"], ["Толщина", "190 мкм"], ["Гарантия", "7 лет"]] },
 ];
 
 const articles = [
@@ -33,8 +33,8 @@ const articles = [
 
 async function main() {
   const categoryMap = new Map();
-  for (const [name, slug, image] of categories) {
-    const category = await prisma.category.upsert({ where: { slug }, update: { name, image }, create: { name, slug, image, sortOrder: categoryMap.size } });
+  for (const [name, slug, image, description] of categories) {
+    const category = await prisma.category.upsert({ where: { slug }, update: { name, image, description }, create: { name, slug, image, description, sortOrder: categoryMap.size } });
     categoryMap.set(slug, category);
   }
 

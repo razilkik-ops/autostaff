@@ -1,0 +1,8 @@
+<%- include('partials/head') %>
+<script type="application/ld+json"><%- JSON.stringify({ '@context':'https://schema.org', '@type':'CollectionPage', name:category.name, description, url:canonicalUrl, mainEntity:{'@type':'ItemList',itemListElement:category.products.map((product,index)=>({'@type':'ListItem',position:index+1,url:new URL(`/product/${product.slug}`,siteUrl).href,name:product.name}))} }).replace(/</g, '\\u003c') %></script>
+<%- include('partials/header') %>
+<main class="category-page">
+  <header class="category-hero"><div class="layout-container"><div class="breadcrumbs light"><a href="/">Главная</a><span>/</span><span>Каталог</span><span>/</span><span><%= category.name %></span></div><div class="category-hero-content"><div><span>Каталог SGCB</span><h1><%= category.name %></h1><p><%= description %></p></div><img src="<%= category.image %>" alt="<%= category.name %> SGCB" /></div></div></header>
+  <section class="layout-container category-products"><div class="section-title-row"><div><h2>Товары категории</h2><p><%= category.products.length %> позиций в каталоге</p></div><a href="/#categories">Все категории →</a></div><% if (category.products.length) { %><div class="product-grid category-product-grid"><% category.products.forEach(product => { %><%- include('partials/product-card', { product }) %><% }) %></div><% } else { %><div class="category-empty"><h2>Товары скоро появятся</h2><p>Свяжитесь с нами — менеджер поможет подобрать продукцию SGCB под вашу задачу.</p></div><% } %></section>
+</main>
+<%- include('partials/footer') %>

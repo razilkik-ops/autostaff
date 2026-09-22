@@ -1,7 +1,7 @@
 import { Router } from "express";
 import slugify from "slugify";
 import { asyncHandler } from "../lib/async-handler.js";
-import { cleanText, parseSpecs } from "../lib/format.js";
+import { cleanText, parseImages, parseSpecs } from "../lib/format.js";
 import { requireAdmin } from "../lib/security.js";
 
 const bool = (value) => value === "on" || value === "true" || value === true;
@@ -25,6 +25,7 @@ function articleData(body, userId, existing = null) {
 }
 
 function productData(body) {
+  const image = cleanText(body.image, 500) || "/assets/detailing-bucket.png";
   return {
     name: cleanText(body.name, 180),
     shortName: cleanText(body.shortName || body.name, 120),
@@ -33,7 +34,8 @@ function productData(body) {
     sku: cleanText(body.sku, 80).toUpperCase(),
     description: cleanText(body.description, 3000),
     price: Math.max(0, Number(body.price) || 0),
-    image: cleanText(body.image, 500) || "/assets/detailing-bucket.png",
+    image,
+    images: parseImages(body.images, image),
     stock: Math.max(0, Number.parseInt(body.stock, 10) || 0),
     published: bool(body.published),
     specs: parseSpecs(body.specs),

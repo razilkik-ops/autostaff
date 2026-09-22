@@ -47,3 +47,17 @@ export function specsToText(value) {
   if (!Array.isArray(value)) return "";
   return value.map(([name, specValue]) => `${name}: ${specValue}`).join("\n");
 }
+
+export function parseImages(value, fallback = "") {
+  const images = String(value || "")
+    .split("\n")
+    .map((item) => cleanText(item, 500))
+    .filter(Boolean);
+  if (fallback && !images.includes(fallback)) images.unshift(fallback);
+  return [...new Set(images)].slice(0, 8);
+}
+
+export function imagesToText(value, fallback = "") {
+  const images = Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
+  return [...new Set(fallback ? [fallback, ...images] : images)].join("\n");
+}

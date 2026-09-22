@@ -21,11 +21,24 @@ export function publicRoutes(db) {
     res.render("home", { title: "SGCB — профессиональные товары для детейлинга", description: "Профессиональная автохимия, оборудование, микрофибра и защитные плёнки SGCB с доставкой по России.", categories, products, articles });
   }));
 
+  router.get("/catalog/:slug", asyncHandler(async (req, res) => {
+    const category = await db.category.findUnique({
+      where: { slug: req.params.slug },
+      include: { products: { where: { published: true }, orderBy: { createdAt: "asc" } } },
+    });
+    if (!category) return res.status(404).render("error", { title: "Категория не найдена", status: 404, message: "Проверьте адрес категории или вернитесь в каталог." });
+    const description = category.description || `${category.name} SGCB для профессионального детейлинга и ухода за автомобилем с доставкой по России.`;
+    res.render("category", { title: `${category.name} SGCB — купить с доставкой по России`, description, category });
+  }));
+
   router.get("/product/:slug", asyncHandler(async (req, res) => {
     const product = await db.product.findFirst({ where: { slug: req.params.slug, published: true }, include: { category: true } });
     if (!product) return res.status(404).render("error", { title: "Товар не найден", status: 404, message: "Такого товара нет или он снят с публикации." });
-    const related = await db.product.findMany({ where: { published: true, categoryId: product.categoryId, id: { not: product.id } }, take: 3 });
-    res.render("product", { title: `${product.name} — SGCB`, description: product.description, product, related });
+    const relatedInCategory = await db.product.findMany({ where: { published: true, categoryId: product.categoryId, id: { not: product.id } }, take: 3 });
+    const relatedFallback = relatedInCategory.length < 3 ? await db.product.findMany({ where: { published: true, id: { notIn: [product.id, ...relatedInCategory.map((item) => item.id)] } }, orderBy: { createdAt: "asc" }, take: 3 - relatedInCategory.length }) : [];
+    const related = [...relatedInCategory, ...relatedFallback];
+    const gallery = Array.isArray(product.images) && product.images.length ? product.images : [product.image];
+    res.render("product", { title: `${product.name} — купить SGCB`, description: product.description, product, related, gallery });
   }));
 
   for (const [path, type, heading, lead] of [

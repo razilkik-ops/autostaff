@@ -138,6 +138,16 @@ document.querySelector("[data-checkout-form]")?.addEventListener("submit", async
 });
 
 const articlePage = document.querySelector("[data-article-id]");
+
+document.querySelectorAll("[data-gallery-thumb]").forEach((thumbnail) => {
+  thumbnail.addEventListener("click", () => {
+    const main = document.querySelector("[data-gallery-main]");
+    if (!main) return;
+    main.src = thumbnail.dataset.gallerySrc;
+    document.querySelectorAll("[data-gallery-thumb]").forEach((item) => item.classList.toggle("active", item === thumbnail));
+  });
+});
+
 document.querySelector("[data-like-button]")?.addEventListener("click", async (event) => {
   const button = event.currentTarget;
   button.disabled = true;
