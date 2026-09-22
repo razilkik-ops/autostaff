@@ -11,7 +11,7 @@ await prisma.$connect();
 await prisma.session.deleteMany({ where: { expiresAt: { lt: new Date() } } });
 
 const app = createApp({ db: prisma, config });
-const server = app.listen(config.port, () => {
+const server = app.listen(config.port, config.host, () => {
   console.log(`SGCB server is running at ${config.appUrl}`);
 });
 

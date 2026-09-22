@@ -9,6 +9,7 @@ if (isProduction && sessionSecret.length < 32) {
 
 export const config = {
   isProduction,
+  host: process.env.HOST || "0.0.0.0",
   port: Number.parseInt(process.env.PORT || "4174", 10),
   appUrl: process.env.APP_URL || "http://localhost:4174",
   databaseUrl: process.env.DATABASE_URL || "",
