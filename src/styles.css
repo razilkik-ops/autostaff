@@ -30,7 +30,7 @@ img { display: block; max-width: 100%; }
 .benefit-bar { height: 44px; color: #e9f3ff; background-color: #0b2a4e; font-size: 13px; }
 .benefit-bar-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
 .benefit { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
-.benefit svg { color: #1680ff; flex: 0 0 auto; }
+.benefit > img { width: 22px; height: 22px; flex: 0 0 auto; object-fit: contain; }
 .location { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 18px; color: white; background: var(--blue); font-weight: 600; font-size: 13px; }
 
 .header { height: 72px; color: white; background: #030d17; }
@@ -48,6 +48,7 @@ img { display: block; max-width: 100%; }
 .header-actions { display: flex; align-items: center; gap: 10px; }
 .header-actions button { position: relative; padding: 3px; color: white; background: transparent; }
 .header-actions button:hover { color: #318bff; }
+.cart-action > img { width: 31px; height: 31px; object-fit: contain; }
 .cart-action span { position: absolute; top: -3px; right: -4px; display: grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 12px; color: white; background: var(--blue); border: 2px solid #030d17; font-size: 9px; font-weight: 800; }
 
 .hero { position: relative; isolation: isolate; height: 450px; overflow: hidden; color: white; background-color: #02070d; background-size: cover; background-position: center; }
@@ -63,7 +64,7 @@ img { display: block; max-width: 100%; }
 .hero-badge { position: absolute; z-index: 2; right: 8px; bottom: -4px; width: 290px; height: auto; }
 .hero-features { position: absolute; z-index: 3; left: var(--gutter); bottom: 28px; width: 54%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .hero-feature { display: flex; align-items: center; gap: 7px; }
-.hero-feature svg { color: #0b7fff; flex: 0 0 auto; }
+.hero-feature > img { width: 30px; height: 30px; flex: 0 0 auto; object-fit: contain; }
 .hero-feature span { display: flex; flex-direction: column; line-height: 1.15; }
 .hero-feature b { font-size: 13px; font-weight: 600; }
 .hero-feature small { color: #d6e1ed; font-size: 12px; }
@@ -114,6 +115,7 @@ img { display: block; max-width: 100%; }
 .product-bottom { display: flex; align-items: end; justify-content: space-between; gap: 4px; margin-top: 8px; }
 .product-bottom b { color: #0a0e14; font-size: 17px; white-space: nowrap; }
 .product-bottom > button { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 4px; color: white; background: var(--blue); }
+.add-to-cart img { width: 20px; height: 20px; flex: 0 0 auto; object-fit: contain; filter: brightness(0) invert(1); }
 .product-bottom > button:hover { background: var(--blue-dark); }
 
 .promo { height: 165px; margin-top: 22px; padding: 26px 30px; display: grid; grid-template-columns: 1.25fr 1fr 1fr; align-items: center; overflow: hidden; border-radius: 6px; color: white; background-color: #05111f; background-size: cover; background-position: center; }
@@ -259,6 +261,7 @@ footer { color: #dae3ee; background: #051424; }
 .add-detail:hover { background: var(--blue-dark); }
 .detail-benefits { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .detail-benefits > div { display: flex; gap: 8px; color: var(--blue); }
+.detail-benefits img { width: 27px; height: 27px; flex: 0 0 auto; object-fit: contain; }
 .detail-benefits span { display: flex; flex-direction: column; color: #1e2938; }
 .detail-benefits b { font-size: 12px; }
 .detail-benefits small { margin-top: 2px; color: #7a899d; font-size: 10px; }
