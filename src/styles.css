@@ -457,6 +457,59 @@ footer { color: #dae3ee; background: #051424; }
 .account-profile > div span { color: #708097; }
 .account-password-form { max-width: 440px; }
 
+.favorite-form { position: absolute; z-index: 2; top: 10px; right: 10px; margin: 0; }
+.favorite-form button, .favorite-login { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #d8e4f0; border-radius: 50%; color: #d73658; background: white; box-shadow: 0 2px 8px rgba(0,0,0,.08); font-size: 23px; line-height: 1; }
+.product-favorite { margin: 13px 0 19px; display: inline-block; color: #bb3150; font-size: 14px; font-weight: 700; }
+.product-favorite button { padding: 0; color: inherit; background: none; font-size: inherit; font-weight: inherit; }
+.product-reviews { margin-top: 42px; padding-top: 25px; border-top: 1px solid var(--line); }
+.product-reviews > p { color: #687a91; font-size: 14px; }
+.product-review-list { margin-top: 20px; display: grid; gap: 12px; }
+.product-review-list article { padding: 18px 20px; border: 1px solid var(--line); border-radius: 8px; background: white; }
+.product-review-list article > div { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.product-review-list strong { font-size: 15px; }
+.product-review-list span { color: #e6a119; font-size: 18px; }
+.product-review-list small { color: #77869a; font-size: 12px; }
+.product-review-list p { color: #40536b; font-size: 14px; line-height: 1.6; }
+.account-order a { color: #075fe1; font-weight: 600; }
+.account-order-status.status-delivered { color: #087449; background: #dff6e9; }
+.order-timeline { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--line); }
+.order-timeline summary { color: #305779; font-size: 14px; font-weight: 700; cursor: pointer; }
+.order-timeline ol { margin: 14px 0 0; padding-left: 22px; }
+.order-timeline li { padding: 4px 0; border: 0; color: #40536b; font-size: 13px; }
+.order-timeline time { margin-left: 12px; color: #8190a2; }
+.order-repeat { margin-top: 17px; display: flex; flex-wrap: wrap; align-items: center; gap: 9px 14px; }
+.order-repeat button, .order-review-item button { padding: 10px 14px; border-radius: 5px; color: white; background: var(--blue); font-size: 13px; font-weight: 700; }
+.order-repeat small { color: #77869a; font-size: 12px; }
+.order-reviews { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.order-reviews h4 { margin: 0 0 12px; font-size: 16px; }
+.order-review-item { margin-top: 12px; padding: 14px; border-radius: 7px; background: #f5f8fc; }
+.order-review-item > strong { display: block; margin-bottom: 9px; font-size: 14px; }
+.order-review-item p { color: #49617e; font-size: 13px; }
+.order-review-item form { display: grid; gap: 10px; }
+.order-review-item label { display: grid; gap: 5px; color: #40536b; font-size: 13px; font-weight: 600; }
+.order-review-item select, .order-review-item textarea { width: 100%; padding: 9px; border: 1px solid #cbd7e4; border-radius: 5px; background: white; font-size: 14px; }
+.order-review-item textarea { min-height: 85px; resize: vertical; }
+.order-review-item button { width: max-content; }
+.account-favorites { display: grid; gap: 12px; }
+.account-favorites article { padding: 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border: 1px solid var(--line); border-radius: 9px; background: white; }
+.account-favorites article > a { min-width: 0; display: flex; align-items: center; gap: 16px; color: #1a293b; }
+.account-favorites img { width: 100px; height: 90px; object-fit: contain; }
+.account-favorites article span { display: grid; gap: 5px; }
+.account-favorites article small { color: #708097; }
+.account-favorites article strong { font-size: 15px; }
+.account-favorites article b { color: #0a66ec; }
+.account-favorites button { padding: 8px 11px; color: #ac3048; background: #fff0f2; border-radius: 5px; font-size: 13px; }
+.account-profile > form { margin-top: 14px; }
+.account-profile label small { color: #74849a; font-size: 12px; font-weight: 400; }
+.profile-address-link { margin: 17px 0 0; color: #63768e; font-size: 13px; }
+.profile-address-link a { color: #075fe1; font-weight: 700; }
+.admin-reviews { display: grid; gap: 12px; }
+.admin-reviews article { padding: 20px; border-radius: 8px; background: white; }
+.admin-reviews article > div { display: flex; justify-content: space-between; gap: 15px; }
+.admin-reviews article small { color: #74849a; }
+.admin-reviews article p { color: #40536b; line-height: 1.5; }
+.admin-reviews button { padding: 9px 12px; border-radius: 4px; color: white; background: var(--blue); }
+
 .admin-body { min-width: 980px; padding-top: 0; color: #172231; background: #eef3f8; }
 .admin-top { position: sticky; z-index: 20; top: 0; height: 64px; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; color: white; background: #061422; }
 .admin-logo { font-size: 22px; font-weight: 900; }

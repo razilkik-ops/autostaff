@@ -15,30 +15,38 @@ export function publicRoutes(db) {
   router.get("/", asyncHandler(async (req, res) => {
     const [categories, products, articles] = await Promise.all([
       db.category.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
-      db.product.findMany({ where: { published: true }, include: { category: true }, orderBy: { createdAt: "asc" }, take: 12 }),
+      db.product.findMany({ where: { published: true }, include: { category: true, _count: { select: { reviews: { where: { status: "VISIBLE" } } } } }, orderBy: { createdAt: "asc" }, take: 12 }),
       db.article.findMany({ where: { type: "BLOG", published: true }, include: { _count: { select: { likes: true, comments: { where: { status: "VISIBLE" } } } } }, orderBy: { publishedAt: "desc" }, take: 3 }),
     ]);
-    res.render("home", { title: "SGCB — профессиональные товары для детейлинга", description: "Профессиональная автохимия, оборудование, микрофибра и защитные плёнки SGCB с доставкой по России.", categories, products, articles });
+    const favoriteIds = req.user ? new Set((await db.favorite.findMany({ where: { userId: req.user.id, productId: { in: products.map((product) => product.id) } }, select: { productId: true } })).map((item) => item.productId)) : new Set();
+    res.render("home", { title: "SGCB — профессиональные товары для детейлинга", description: "Профессиональная автохимия, оборудование, микрофибра и защитные плёнки SGCB с доставкой по России.", categories, products, articles, favoriteIds });
   }));
 
   router.get("/catalog/:slug", asyncHandler(async (req, res) => {
     const category = await db.category.findUnique({
       where: { slug: req.params.slug },
-      include: { products: { where: { published: true }, orderBy: { createdAt: "asc" } } },
+      include: { products: { where: { published: true }, include: { _count: { select: { reviews: { where: { status: "VISIBLE" } } } } }, orderBy: { createdAt: "asc" } } },
     });
     if (!category) return res.status(404).render("error", { title: "Категория не найдена", status: 404, message: "Проверьте адрес категории или вернитесь в каталог." });
     const description = category.description || `${category.name} SGCB для профессионального детейлинга и ухода за автомобилем с доставкой по России.`;
-    res.render("category", { title: `${category.name} SGCB — купить с доставкой по России`, description, category });
+    const favoriteIds = req.user ? new Set((await db.favorite.findMany({ where: { userId: req.user.id, productId: { in: category.products.map((product) => product.id) } }, select: { productId: true } })).map((item) => item.productId)) : new Set();
+    res.render("category", { title: `${category.name} SGCB — купить с доставкой по России`, description, category, favoriteIds });
   }));
 
   router.get("/product/:slug", asyncHandler(async (req, res) => {
     const product = await db.product.findFirst({ where: { slug: req.params.slug, published: true }, include: { category: true } });
     if (!product) return res.status(404).render("error", { title: "Товар не найден", status: 404, message: "Такого товара нет или он снят с публикации." });
-    const relatedInCategory = await db.product.findMany({ where: { published: true, categoryId: product.categoryId, id: { not: product.id } }, take: 3 });
-    const relatedFallback = relatedInCategory.length < 3 ? await db.product.findMany({ where: { published: true, id: { notIn: [product.id, ...relatedInCategory.map((item) => item.id)] } }, orderBy: { createdAt: "asc" }, take: 3 - relatedInCategory.length }) : [];
+    const relatedInCategory = await db.product.findMany({ where: { published: true, categoryId: product.categoryId, id: { not: product.id } }, include: { _count: { select: { reviews: { where: { status: "VISIBLE" } } } } }, take: 3 });
+    const relatedFallback = relatedInCategory.length < 3 ? await db.product.findMany({ where: { published: true, id: { notIn: [product.id, ...relatedInCategory.map((item) => item.id)] } }, include: { _count: { select: { reviews: { where: { status: "VISIBLE" } } } } }, orderBy: { createdAt: "asc" }, take: 3 - relatedInCategory.length }) : [];
     const related = [...relatedInCategory, ...relatedFallback];
     const gallery = Array.isArray(product.images) && product.images.length ? product.images : [product.image];
-    res.render("product", { title: `${product.name} — купить SGCB`, description: product.description, product, related, gallery });
+    const [reviews, favorites] = await Promise.all([
+      db.productReview.findMany({ where: { productId: product.id, status: "VISIBLE" }, include: { user: { select: { name: true } } }, orderBy: { createdAt: "desc" } }),
+      req.user ? db.favorite.findMany({ where: { userId: req.user.id, productId: { in: [product.id, ...related.map((item) => item.id)] } }, select: { productId: true } }) : [],
+    ]);
+    const favoriteIds = new Set(favorites.map((item) => item.productId));
+    const averageRating = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : null;
+    res.render("product", { title: `${product.name} — купить SGCB`, description: product.description, product, related, gallery, reviews, averageRating, favoriteIds });
   }));
 
   for (const [path, type, heading, lead] of [

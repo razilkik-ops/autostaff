@@ -39,12 +39,13 @@ test("регистрация, сессия, лайки, комментарии, 
   const jar = new Map();
   let createdUser;
   let createdOrder;
+  let repeatedOrder;
   let createdCategory;
   let createdProduct;
   let createdArticle;
   let uploadedFile;
   const article = await prisma.article.findFirst({ where: { published: true }, orderBy: { createdAt: "asc" } });
-  const product = await prisma.product.findFirst({ where: { published: true, stock: { gt: 1 } }, orderBy: { createdAt: "asc" } });
+  const product = await prisma.product.findFirst({ where: { published: true, stock: { gt: 3 } }, orderBy: { createdAt: "asc" } });
   assert.ok(article, "перед тестом выполните npm run db:seed");
   assert.ok(product, "перед тестом выполните npm run db:seed");
 
@@ -98,7 +99,8 @@ test("регистрация, сессия, лайки, комментарии, 
     await prisma.session.deleteMany({ where: { user: { email } } });
     await prisma.user.deleteMany({ where: { email } });
     if (createdOrder) await prisma.order.deleteMany({ where: { id: createdOrder.id } });
-    if (createdOrder) await prisma.product.update({ where: { id: product.id }, data: { stock: { increment: 2 } } });
+    if (repeatedOrder) await prisma.order.deleteMany({ where: { id: repeatedOrder.id } });
+    if (createdOrder) await prisma.product.update({ where: { id: product.id }, data: { stock: { increment: repeatedOrder ? 4 : 2 } } });
     if (createdArticle) await prisma.article.deleteMany({ where: { id: createdArticle.id } });
     if (createdProduct) await prisma.product.deleteMany({ where: { id: createdProduct.id } });
     if (createdCategory) await prisma.category.deleteMany({ where: { id: createdCategory.id } });
@@ -113,6 +115,8 @@ test("регистрация, сессия, лайки, комментарии, 
   const registerBody = new URLSearchParams({
     _csrf: csrf,
     name: "Тестовый пользователь",
+    phone: "+7 900 000-00-00",
+    birthDate: "1990-06-15",
     email,
     password: "Integration-Password-2026!",
     returnTo: `/blog/${article.slug}`,
@@ -126,11 +130,26 @@ test("регистрация, сессия, лайки, комментарии, 
   assert.equal(registration.headers.get("location"), `/blog/${article.slug}`);
   createdUser = await prisma.user.findUnique({ where: { email } });
   assert.ok(createdUser);
+  assert.equal(createdUser.phone, "+7 900 000-00-00");
+  assert.equal(createdUser.birthDate.toISOString().slice(0, 10), "1990-06-15");
   assert.notEqual(createdUser.passwordHash, "Integration-Password-2026!");
 
   const accountPage = await request(baseUrl, jar, "/account/orders");
   assert.equal(accountPage.status, 200);
   assert.match(await accountPage.text(), /Мои заказы/);
+  const profileUpdate = await request(baseUrl, jar, "/account/settings/profile", {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf, name: "Тестовый Покупатель", phone: "+7 911 111-11-11", birthDate: "1991-07-16" }),
+  });
+  assert.equal(profileUpdate.status, 302);
+  assert.equal((await prisma.user.findUnique({ where: { email } })).phone, "+7 911 111-11-11");
+  const favorite = await request(baseUrl, jar, `/account/favorites/${product.id}`, {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf, returnTo: "/account/favorites" }),
+  });
+  assert.equal(favorite.status, 302);
+  assert.equal(await prisma.favorite.count({ where: { userId: createdUser.id, productId: product.id } }), 1);
+  assert.match(await (await request(baseUrl, jar, "/account/favorites")).text(), new RegExp(product.name));
   const addAddress = await request(baseUrl, jar, "/account/addresses", {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -216,9 +235,23 @@ test("регистрация, сессия, лайки, комментарии, 
   createdOrder = await prisma.order.findUnique({ where: { number: orderResult.number }, include: { items: true } });
   assert.equal(Number(createdOrder.total), Number(product.price) * 2, "цена должна браться из БД, а не из браузера");
   assert.match(createdOrder.delivery, /Владимир, ул. Мира, 2/);
+  assert.equal(await prisma.orderStatusEvent.count({ where: { orderId: createdOrder.id, status: "NEW" } }), 1);
   const ordersPage = await request(baseUrl, jar, "/account/orders");
   assert.match(await ordersPage.text(), new RegExp(createdOrder.number));
-  assert.equal((await prisma.product.findUnique({ where: { id: product.id } })).stock, product.stock - 2, "остаток должен списываться внутри транзакции");
+  const earlyReview = await request(baseUrl, jar, `/account/orders/${createdOrder.id}/items/${createdOrder.items[0].id}/review`, {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf, rating: "5", body: "Отличное качество товара" }),
+  });
+  assert.equal(earlyReview.status, 403, "отзыв до получения заказа запрещён");
+  const repeat = await request(baseUrl, jar, `/account/orders/${createdOrder.id}/repeat`, {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ _csrf: csrf }),
+  });
+  assert.equal(repeat.status, 302);
+  repeatedOrder = await prisma.order.findFirst({ where: { userId: createdUser.id, id: { not: createdOrder.id } }, orderBy: { createdAt: "desc" } });
+  assert.ok(repeatedOrder);
+  assert.equal(Number(repeatedOrder.total), Number(product.price) * 2);
+  assert.equal(repeatedOrder.delivery, createdOrder.delivery);
+  assert.equal((await prisma.product.findUnique({ where: { id: product.id } })).stock, product.stock - 4, "остаток должен списываться внутри транзакции");
 
   const forbidden = await request(baseUrl, jar, "/admin");
   assert.equal(forbidden.status, 403);
@@ -230,6 +263,23 @@ test("регистрация, сессия, лайки, комментарии, 
   const admin = await request(baseUrl, jar, "/admin");
   assert.equal(admin.status, 200);
   assert.match(await admin.text(), /Обзор магазина/);
+  const delivered = await request(baseUrl, jar, `/admin/orders/${createdOrder.id}/status`, {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ _csrf: csrf, status: "DELIVERED" }),
+  });
+  assert.equal(delivered.status, 302);
+  assert.equal(await prisma.orderStatusEvent.count({ where: { orderId: createdOrder.id } }), 2);
+  assert.match(await (await request(baseUrl, jar, "/account/orders")).text(), /Получен/);
+  const review = await request(baseUrl, jar, `/account/orders/${createdOrder.id}/items/${createdOrder.items[0].id}/review`, {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ _csrf: csrf, rating: "5", body: "Отличное качество товара" }),
+  });
+  assert.equal(review.status, 302);
+  const savedReview = await prisma.productReview.findUnique({ where: { orderItemId: createdOrder.items[0].id } });
+  assert.equal(savedReview.rating, 5);
+  assert.match(await (await request(baseUrl, jar, `/product/${product.slug}`)).text(), /Отличное качество товара/);
+  assert.equal((await request(baseUrl, jar, "/admin/reviews")).status, 200);
+  const hideReview = await request(baseUrl, jar, `/admin/reviews/${savedReview.id}/toggle`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ _csrf: csrf }) });
+  assert.equal(hideReview.status, 302);
+  assert.doesNotMatch(await (await request(baseUrl, jar, `/product/${product.slug}`)).text(), /Отличное качество товара/);
 
   const createCategory = await request(baseUrl, jar, "/admin/categories", {
     method: "POST",

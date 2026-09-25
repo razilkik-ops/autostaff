@@ -117,7 +117,19 @@ async function loadCheckoutAddresses() {
     select.replaceChildren(new Option("Выбрать адрес или уточнить в комментарии", ""));
     for (const address of addresses) select.add(new Option(`${address.label}: ${address.line}`, address.id, address.isDefault, address.isDefault));
     if (!addresses.length) select.add(new Option("Сначала добавьте адрес в личном кабинете", "", true, true));
+    syncDeliveryAddress();
   } catch {}
+}
+
+function syncDeliveryAddress() {
+  const form = document.querySelector("[data-checkout-form]");
+  if (!form) return;
+  const shipping = form.querySelector('[name="delivery"]')?.value === "Доставка по России";
+  const selected = Boolean(form.querySelector('[name="addressId"]')?.value);
+  const label = form.querySelector("[data-checkout-address-input]");
+  const input = form.querySelector('[name="deliveryAddress"]');
+  if (label) label.classList.toggle("hidden", !shipping || selected);
+  if (input) input.required = shipping && !selected;
 }
 
 document.querySelector('[data-checkout-form] select[name="delivery"]')?.addEventListener("change", (event) => {
@@ -127,7 +139,10 @@ document.querySelector('[data-checkout-form] select[name="delivery"]')?.addEvent
     const select = document.querySelector("[data-checkout-address]");
     if (select) select.value = "";
   }
+  syncDeliveryAddress();
 });
+document.querySelector("[data-checkout-address]")?.addEventListener("change", syncDeliveryAddress);
+syncDeliveryAddress();
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") { cartOverlay?.classList.add("hidden"); checkoutOverlay?.classList.add("hidden"); }

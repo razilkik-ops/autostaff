@@ -1,0 +1,14 @@
+<%- include('partials/head') %>
+<div class="admin-page-head"><div><span>Мнения покупателей</span><h1>Отзывы</h1></div></div>
+<div class="admin-reviews">
+  <% if (!reviews.length) { %><p>Отзывов пока нет.</p><% } %>
+  <% for (const review of reviews) { %>
+    <article>
+      <div><strong><%= review.orderItem.productName %></strong><span><%= review.rating %> из 5 · <%= review.status === 'VISIBLE' ? 'Опубликован' : 'Скрыт' %></span></div>
+      <small><%= review.user.name %> · <%= review.user.email %> · заказ № <%= review.orderItem.order.number %> · <%= formatDateTime(review.createdAt) %></small>
+      <p><%= review.body %></p>
+      <form action="/admin/reviews/<%= review.id %>/toggle" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>" /><button type="submit"><%= review.status === 'VISIBLE' ? 'Скрыть отзыв' : 'Опубликовать отзыв' %></button></form>
+    </article>
+  <% } %>
+</div>
+<%- include('partials/foot') %>

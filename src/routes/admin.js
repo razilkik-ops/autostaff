@@ -185,9 +185,25 @@ export function adminRoutes(db) {
   }));
 
   router.post("/admin/orders/:id/status", asyncHandler(async (req, res) => {
-    const status = ["NEW", "PROCESSING", "COMPLETED", "CANCELLED"].includes(req.body.status) ? req.body.status : "NEW";
-    await db.order.update({ where: { id: req.params.id }, data: { status } });
+    const status = req.body.status;
+    if (!["NEW", "PROCESSING", "COMPLETED", "DELIVERED", "CANCELLED"].includes(status)) return res.redirect("/admin/orders?error=Недопустимый статус");
+    await db.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({ where: { id: req.params.id }, select: { status: true } });
+      if (!order || order.status === status) return;
+      await tx.order.update({ where: { id: req.params.id }, data: { status, statusEvents: { create: { status } } } });
+    });
     res.redirect("/admin/orders?success=Статус заказа обновлён");
+  }));
+
+  router.get("/admin/reviews", asyncHandler(async (req, res) => {
+    const reviews = await db.productReview.findMany({ include: { user: { select: { name: true, email: true } }, orderItem: { select: { productName: true, order: { select: { number: true } } } } }, orderBy: { createdAt: "desc" }, take: 200 });
+    res.render("admin/reviews", { title: "Отзывы — SGCB Admin", description: "Модерация отзывов", reviews });
+  }));
+
+  router.post("/admin/reviews/:id/toggle", asyncHandler(async (req, res) => {
+    const review = await db.productReview.findUnique({ where: { id: req.params.id } });
+    if (review) await db.productReview.update({ where: { id: review.id }, data: { status: review.status === "VISIBLE" ? "HIDDEN" : "VISIBLE" } });
+    res.redirect("/admin/reviews?success=Статус отзыва обновлён");
   }));
 
   return router;

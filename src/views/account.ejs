@@ -2,10 +2,11 @@
 <%- include('partials/header') %>
 <main class="account-page">
   <div class="layout-container account-container">
-    <div class="account-intro"><span>ЛИЧНЫЙ КАБИНЕТ</span><h1>Здравствуйте, <%= user.name %></h1><p>Ваши заказы, адреса доставки и настройки доступа — в одном месте.</p></div>
+    <div class="account-intro"><span>ЛИЧНЫЙ КАБИНЕТ</span><h1>Здравствуйте, <%= user.name %></h1><p>Заказы, избранное, адреса и личные данные — в одном месте.</p></div>
     <div class="account-layout">
       <nav class="account-nav" aria-label="Разделы личного кабинета">
         <a href="/account/orders" class="<%= section === 'orders' ? 'active' : '' %>" <% if (section === 'orders') { %>aria-current="page"<% } %>>Мои заказы</a>
+        <a href="/account/favorites" class="<%= section === 'favorites' ? 'active' : '' %>" <% if (section === 'favorites') { %>aria-current="page"<% } %>>Избранное</a>
         <a href="/account/addresses" class="<%= section === 'addresses' ? 'active' : '' %>" <% if (section === 'addresses') { %>aria-current="page"<% } %>>Мои адреса</a>
         <a href="/account/settings" class="<%= section === 'settings' ? 'active' : '' %>" <% if (section === 'settings') { %>aria-current="page"<% } %>>Настройки и пароль</a>
         <% if (user.role === 'ADMIN') { %><a href="/admin">Панель администратора ↗</a><% } %>
@@ -17,17 +18,26 @@
         <% if (typeof formError !== 'undefined' && formError) { %><div class="account-alert error" role="alert"><%= formError %></div><% } %>
 
         <% if (section === 'orders') { %>
-          <div class="account-section-heading"><div><h2>Мои заказы</h2><p>Здесь отображаются заказы, оформленные после входа в аккаунт.</p></div><a href="/#catalog">В каталог →</a></div>
+          <div class="account-section-heading"><div><h2>Мои заказы</h2><p>История и изменения статусов заказов, оформленных после входа в аккаунт.</p></div><a href="/#catalog">В каталог →</a></div>
           <% if (!orders.length) { %><div class="account-empty"><strong>Заказов пока нет</strong><p>Добавьте товары в корзину — оформленный заказ появится здесь.</p><a href="/#catalog">Посмотреть товары</a></div><% } %>
           <div class="account-orders">
-            <% for (const order of orders) { const status = { NEW: 'Новый', PROCESSING: 'В обработке', COMPLETED: 'Выполнен', CANCELLED: 'Отменён' }[order.status] || order.status; %>
+            <% for (const order of orders) { const labels = { NEW: 'Новый', PROCESSING: 'В обработке', COMPLETED: 'Отправлен / готов к выдаче', DELIVERED: 'Получен', CANCELLED: 'Отменён' }; const status = labels[order.status] || order.status; %>
               <article class="account-order">
                 <div class="account-order-head"><div><small><%= formatDateTime(order.createdAt) %></small><h3>Заказ № <%= order.number %></h3></div><span class="account-order-status status-<%= order.status.toLowerCase() %>"><%= status %></span></div>
-                <ul><% for (const item of order.items) { %><li><span><%= item.productName %> <small>× <%= item.quantity %></small></span><b><%= formatMoney(Number(item.price) * item.quantity) %></b></li><% } %></ul>
+                <ul><% for (const item of order.items) { %><li><span><% if (item.product?.published) { %><a href="/product/<%= item.product.slug %>"><%= item.productName %></a><% } else { %><%= item.productName %><% } %> <small>× <%= item.quantity %></small></span><b><%= formatMoney(Number(item.price) * item.quantity) %></b></li><% } %></ul>
                 <div class="account-order-foot"><span><b>Получение:</b> <%= order.delivery %></span><strong>Итого: <%= formatMoney(order.total) %></strong></div>
+                <details class="order-timeline"><summary>История статусов</summary><ol><% for (const event of order.statusEvents) { %><li><span><%= labels[event.status] || event.status %></span><time><%= formatDateTime(event.createdAt) %></time></li><% } %></ol></details>
+                <form class="order-repeat" action="/account/orders/<%= order.id %>/repeat" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>" /><button type="submit">Повторить заказ в 1 клик</button><small>Новый заказ создаётся по текущим ценам и с теми же контактами и адресом.</small></form>
+                <% if (order.status === 'DELIVERED') { %><div class="order-reviews"><h4>Оцените товары после получения</h4><% for (const item of order.items) { %><div class="order-review-item"><strong><%= item.productName %></strong><% if (item.review) { %><p>Ваша оценка: <%= item.review.rating %> из 5. <%= item.review.status === 'VISIBLE' ? 'Отзыв опубликован.' : 'Отзыв скрыт модератором.' %></p><% } else { %><form action="/account/orders/<%= order.id %>/items/<%= item.id %>/review" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>" /><label>Оценка<select name="rating" required><option value="">Выберите</option><% for (let rating = 5; rating >= 1; rating--) { %><option value="<%= rating %>"><%= rating %> из 5</option><% } %></select></label><label>Ваш отзыв<textarea name="body" required minlength="10" maxlength="1000" placeholder="Расскажите, как товар показал себя в работе"></textarea></label><button type="submit">Опубликовать отзыв</button></form><% } %></div><% } %></div><% } %>
               </article>
             <% } %>
           </div>
+        <% } %>
+
+        <% if (section === 'favorites') { %>
+          <div class="account-section-heading"><div><h2>Избранное</h2><p>Сохранённые товары всегда под рукой.</p></div><a href="/#catalog">В каталог →</a></div>
+          <% if (!favorites.length) { %><div class="account-empty"><strong>Избранное пока пусто</strong><p>Нажмите на сердечко у товара, чтобы сохранить его здесь.</p><a href="/#catalog">Посмотреть товары</a></div><% } %>
+          <div class="account-favorites"><% for (const favorite of favorites) { const product = favorite.product; %><article><a href="/product/<%= product.slug %>"><img src="<%= product.image %>" alt="" /><span><small><%= product.brand %></small><strong><%= product.name %></strong><b><%= formatMoney(product.price) %></b></span></a><form action="/account/favorites/<%= product.id %>" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>" /><input type="hidden" name="returnTo" value="/account/favorites" /><button type="submit">Убрать</button></form></article><% } %></div>
         <% } %>
 
         <% if (section === 'addresses') { %>
@@ -74,8 +84,8 @@
         <% } %>
 
         <% if (section === 'settings') { %>
-          <div class="account-section-heading"><div><h2>Настройки</h2><p>Управляйте безопасностью своего аккаунта.</p></div></div>
-          <section class="account-panel account-profile"><h3>Ваш профиль</h3><div><span>Имя</span><b><%= user.name %></b></div><div><span>E-mail</span><b><%= user.email %></b></div></section>
+          <div class="account-section-heading"><div><h2>Профиль и настройки</h2><p>Контактные данные для заказов и безопасность аккаунта.</p></div></div>
+          <section class="account-panel account-profile"><h3>Ваш профиль</h3><form class="account-form account-address-form" action="/account/settings/profile" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>" /><label class="wide">ФИО<input name="name" required minlength="2" maxlength="80" autocomplete="name" value="<%= user.name %>" /></label><label>Телефон<input name="phone" type="tel" required minlength="7" maxlength="32" autocomplete="tel" value="<%= user.phone || '' %>" /></label><label>Дата рождения<input name="birthDate" type="date" required autocomplete="bday" value="<%= user.birthDate ? user.birthDate.toISOString().slice(0, 10) : '' %>" /></label><label class="wide">Электронная почта<input value="<%= user.email %>" type="email" disabled /><small>E-mail используется для входа в аккаунт.</small></label><button class="account-primary">Сохранить данные</button></form><p class="profile-address-link">Адрес доставки можно добавить в разделе <a href="/account/addresses">«Мои адреса»</a>.</p></section>
           <section class="account-panel"><h3>Сменить пароль</h3><p>После смены пароля вход на других устройствах будет завершён.</p>
             <form class="account-form account-password-form" action="/account/settings/password" method="post">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>" />

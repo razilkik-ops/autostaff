@@ -2,6 +2,7 @@ import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { asyncHandler } from "../lib/async-handler.js";
 import { cleanText, normalizeEmail, safeReturnTo } from "../lib/format.js";
+import { parseBirthDate } from "../lib/profile.js";
 import { createSession, destroySession, hashPassword, verifyPassword } from "../lib/security.js";
 
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: "draft-8", legacyHeaders: false });
@@ -17,15 +18,17 @@ export function authRoutes(db, config) {
   router.post("/register", authLimiter, asyncHandler(async (req, res) => {
     if (req.user) return res.redirect("/account");
     const name = cleanText(req.body.name, 80);
+    const phone = cleanText(req.body.phone, 32);
+    const birthDate = parseBirthDate(req.body.birthDate);
     const email = normalizeEmail(req.body.email);
     const password = String(req.body.password || "");
     const returnTo = safeReturnTo(req.body.returnTo, "/account");
-    if (name.length < 2 || !email.includes("@") || password.length < 8) {
-      return res.status(422).render("auth", { title: "Регистрация — SGCB", description: "Создайте аккаунт SGCB", mode: "register", returnTo, formError: "Укажите имя, корректный e-mail и пароль не короче 8 символов." });
+    if (name.length < 2 || phone.length < 7 || !birthDate || !email.includes("@") || password.length < 8) {
+      return res.status(422).render("auth", { title: "Регистрация — SGCB", description: "Создайте аккаунт SGCB", mode: "register", returnTo, formError: "Укажите ФИО, телефон, дату рождения, корректный e-mail и пароль не короче 8 символов." });
     }
     const exists = await db.user.findUnique({ where: { email } });
     if (exists) return res.status(409).render("auth", { title: "Регистрация — SGCB", description: "Создайте аккаунт SGCB", mode: "register", returnTo, formError: "Аккаунт с таким e-mail уже существует." });
-    const user = await db.user.create({ data: { name, email, passwordHash: await hashPassword(password) } });
+    const user = await db.user.create({ data: { name, phone, birthDate, email, passwordHash: await hashPassword(password) } });
     await createSession(db, res, user.id, config);
     res.redirect(returnTo);
   }));
