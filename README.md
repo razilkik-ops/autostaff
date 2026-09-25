@@ -79,3 +79,23 @@ npm start
 ```
 
 Текущий workflow GitHub выполняет сборку, миграции, seed и интеграционные тесты в изолированном PostgreSQL-контейнере; он больше не публикует несовместимую серверную версию в GitHub Pages.
+
+### VPS Beget
+
+Рабочий экземпляр размещён в `/srv/sgcb/current` под отдельным системным пользователем `sgcb`. PostgreSQL находится на том же сервере. Приложение слушает только `127.0.0.1:4174`; внешний HTTPS принимает Nginx. Конфигурации сервиса, прокси и продления сертификата находятся в [`deploy/`](deploy/).
+
+До подключения собственного домена публичный адрес — `https://159.194.234.145.sslip.io/`. Сертификат Let's Encrypt продлевает `sgcb-certbot-renew.timer`. После смены домена нужно обновить `APP_URL` в серверном `.env`, `server_name` и пути сертификата в конфигурации Nginx, затем выпустить новый сертификат и перезапустить сервис.
+
+Для обновления приложения после загрузки изменений в GitHub:
+
+```bash
+cd /srv/sgcb/current
+sudo -u sgcb git pull --ff-only
+sudo -u sgcb npm ci --no-audit --no-fund
+sudo -u sgcb npm run build
+sudo -u sgcb npm run db:migrate
+systemctl restart sgcb
+curl -fsS http://127.0.0.1:4174/health
+```
+
+Секреты и учётные данные администратора остаются только на сервере: `.env` принадлежит `sgcb`, а `/root/sgcb-admin-credentials` доступен только root. Первоначальный `seed` повторно при обновлении запускать не требуется. Для уведомлений о заказах заполните `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHAT_ID` в серверном `.env` и перезапустите `sgcb`.
