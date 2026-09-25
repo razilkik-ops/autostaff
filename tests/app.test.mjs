@@ -260,7 +260,7 @@ test("регистрация, сессия, лайки, комментарии, 
     body: "{}",
   });
   assert.equal(anonymousLike.status, 401);
-  const anonymousAccount = await request(baseUrl, anonymousJar, "/account/orders");
+  const anonymousAccount = await request(baseUrl, anonymousJar, "/account/orders", { headers: { accept: "text/html" } });
   assert.equal(anonymousAccount.status, 302);
   assert.match(anonymousAccount.headers.get("location"), /^\/login\?returnTo=/);
 });
