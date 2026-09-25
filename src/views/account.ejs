@@ -1,0 +1,93 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<main class="account-page">
+  <div class="layout-container account-container">
+    <div class="account-intro"><span>ЛИЧНЫЙ КАБИНЕТ</span><h1>Здравствуйте, <%= user.name %></h1><p>Ваши заказы, адреса доставки и настройки доступа — в одном месте.</p></div>
+    <div class="account-layout">
+      <nav class="account-nav" aria-label="Разделы личного кабинета">
+        <a href="/account/orders" class="<%= section === 'orders' ? 'active' : '' %>" <% if (section === 'orders') { %>aria-current="page"<% } %>>Мои заказы</a>
+        <a href="/account/addresses" class="<%= section === 'addresses' ? 'active' : '' %>" <% if (section === 'addresses') { %>aria-current="page"<% } %>>Мои адреса</a>
+        <a href="/account/settings" class="<%= section === 'settings' ? 'active' : '' %>" <% if (section === 'settings') { %>aria-current="page"<% } %>>Настройки и пароль</a>
+        <% if (user.role === 'ADMIN') { %><a href="/admin">Панель администратора ↗</a><% } %>
+        <form action="/logout" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>" /><button type="submit">Выйти из аккаунта</button></form>
+      </nav>
+      <div class="account-content">
+        <% if (query.success) { %><div class="account-alert success" role="status"><%= query.success %></div><% } %>
+        <% if (query.error) { %><div class="account-alert error" role="alert"><%= query.error %></div><% } %>
+        <% if (typeof formError !== 'undefined' && formError) { %><div class="account-alert error" role="alert"><%= formError %></div><% } %>
+
+        <% if (section === 'orders') { %>
+          <div class="account-section-heading"><div><h2>Мои заказы</h2><p>Здесь отображаются заказы, оформленные после входа в аккаунт.</p></div><a href="/#catalog">В каталог →</a></div>
+          <% if (!orders.length) { %><div class="account-empty"><strong>Заказов пока нет</strong><p>Добавьте товары в корзину — оформленный заказ появится здесь.</p><a href="/#catalog">Посмотреть товары</a></div><% } %>
+          <div class="account-orders">
+            <% for (const order of orders) { const status = { NEW: 'Новый', PROCESSING: 'В обработке', COMPLETED: 'Выполнен', CANCELLED: 'Отменён' }[order.status] || order.status; %>
+              <article class="account-order">
+                <div class="account-order-head"><div><small><%= formatDateTime(order.createdAt) %></small><h3>Заказ № <%= order.number %></h3></div><span class="account-order-status status-<%= order.status.toLowerCase() %>"><%= status %></span></div>
+                <ul><% for (const item of order.items) { %><li><span><%= item.productName %> <small>× <%= item.quantity %></small></span><b><%= formatMoney(Number(item.price) * item.quantity) %></b></li><% } %></ul>
+                <div class="account-order-foot"><span><b>Получение:</b> <%= order.delivery %></span><strong>Итого: <%= formatMoney(order.total) %></strong></div>
+              </article>
+            <% } %>
+          </div>
+        <% } %>
+
+        <% if (section === 'addresses') { %>
+          <div class="account-section-heading"><div><h2>Мои адреса</h2><p>Сохраните адрес, чтобы выбирать его при оформлении заказа.</p></div></div>
+          <div class="account-addresses">
+            <% for (const address of addresses) { %>
+              <article class="account-address-card">
+                <div class="account-address-head"><h3><%= address.label %></h3><% if (address.isDefault) { %><span>Основной</span><% } %></div>
+                <p><%= addressLine(address) %></p><small><%= address.recipient %> · <%= address.phone %></small>
+                <details><summary>Изменить адрес</summary>
+                  <form class="account-form account-address-form" action="/account/addresses/<%= address.id %>" method="post">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <label>Название<input name="label" required maxlength="40" value="<%= address.label %>" /></label>
+                    <label>Получатель<input name="recipient" required maxlength="80" value="<%= address.recipient %>" autocomplete="name" /></label>
+                    <label>Телефон<input name="phone" required maxlength="32" value="<%= address.phone %>" type="tel" autocomplete="tel" /></label>
+                    <label>Город<input name="city" required maxlength="60" value="<%= address.city %>" autocomplete="address-level2" /></label>
+                    <label class="wide">Улица, дом<input name="street" required maxlength="100" value="<%= address.street %>" autocomplete="street-address" /></label>
+                    <label>Квартира / офис<input name="apartment" maxlength="30" value="<%= address.apartment || '' %>" /></label>
+                    <label>Индекс<input name="postalCode" maxlength="12" value="<%= address.postalCode || '' %>" autocomplete="postal-code" /></label>
+                    <label class="account-checkbox wide"><input type="checkbox" name="isDefault" <%= address.isDefault ? 'checked' : '' %> /> Основной адрес</label>
+                    <button class="account-primary">Сохранить изменения</button>
+                  </form>
+                </details>
+                <form action="/account/addresses/<%= address.id %>/delete" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>" /><button class="account-delete" type="submit">Удалить адрес</button></form>
+              </article>
+            <% } %>
+          </div>
+          <% if (addresses.length < 10) { %>
+            <section class="account-panel"><h3>Добавить адрес</h3><p>Контактные данные и адрес доступны только в вашем кабинете.</p>
+              <form class="account-form account-address-form" action="/account/addresses" method="post">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <label>Название<input name="label" required maxlength="40" placeholder="Дом или работа" /></label>
+                <label>Получатель<input name="recipient" required maxlength="80" value="<%= user.name %>" autocomplete="name" /></label>
+                <label>Телефон<input name="phone" required maxlength="32" type="tel" autocomplete="tel" placeholder="+7 900 000-00-00" /></label>
+                <label>Город<input name="city" required maxlength="60" autocomplete="address-level2" /></label>
+                <label class="wide">Улица, дом<input name="street" required maxlength="100" autocomplete="street-address" /></label>
+                <label>Квартира / офис<input name="apartment" maxlength="30" /></label>
+                <label>Индекс<input name="postalCode" maxlength="12" autocomplete="postal-code" /></label>
+                <label class="account-checkbox wide"><input type="checkbox" name="isDefault" /> Сделать основным</label>
+                <button class="account-primary">Сохранить адрес</button>
+              </form>
+            </section>
+          <% } %>
+        <% } %>
+
+        <% if (section === 'settings') { %>
+          <div class="account-section-heading"><div><h2>Настройки</h2><p>Управляйте безопасностью своего аккаунта.</p></div></div>
+          <section class="account-panel account-profile"><h3>Ваш профиль</h3><div><span>Имя</span><b><%= user.name %></b></div><div><span>E-mail</span><b><%= user.email %></b></div></section>
+          <section class="account-panel"><h3>Сменить пароль</h3><p>После смены пароля вход на других устройствах будет завершён.</p>
+            <form class="account-form account-password-form" action="/account/settings/password" method="post">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <label>Текущий пароль<input type="password" name="currentPassword" required autocomplete="current-password" /></label>
+              <label>Новый пароль<input type="password" name="newPassword" required minlength="8" maxlength="128" autocomplete="new-password" /></label>
+              <label>Повторите новый пароль<input type="password" name="confirmPassword" required minlength="8" maxlength="128" autocomplete="new-password" /></label>
+              <button class="account-primary">Изменить пароль</button>
+            </form>
+          </section>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</main>
+<%- include('partials/footer') %>

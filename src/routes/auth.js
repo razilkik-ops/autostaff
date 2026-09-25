@@ -10,16 +10,16 @@ export function authRoutes(db, config) {
   const router = Router();
 
   router.get("/register", (req, res) => {
-    if (req.user) return res.redirect("/");
-    res.render("auth", { title: "Регистрация — SGCB", description: "Создайте аккаунт SGCB", mode: "register", returnTo: safeReturnTo(req.query.returnTo) });
+    if (req.user) return res.redirect("/account");
+    res.render("auth", { title: "Регистрация — SGCB", description: "Создайте аккаунт SGCB", mode: "register", returnTo: safeReturnTo(req.query.returnTo, "/account") });
   });
 
   router.post("/register", authLimiter, asyncHandler(async (req, res) => {
-    if (req.user) return res.redirect("/");
+    if (req.user) return res.redirect("/account");
     const name = cleanText(req.body.name, 80);
     const email = normalizeEmail(req.body.email);
     const password = String(req.body.password || "");
-    const returnTo = safeReturnTo(req.body.returnTo);
+    const returnTo = safeReturnTo(req.body.returnTo, "/account");
     if (name.length < 2 || !email.includes("@") || password.length < 8) {
       return res.status(422).render("auth", { title: "Регистрация — SGCB", description: "Создайте аккаунт SGCB", mode: "register", returnTo, formError: "Укажите имя, корректный e-mail и пароль не короче 8 символов." });
     }
@@ -31,15 +31,15 @@ export function authRoutes(db, config) {
   }));
 
   router.get("/login", (req, res) => {
-    if (req.user) return res.redirect("/");
-    res.render("auth", { title: "Вход — SGCB", description: "Войдите в аккаунт SGCB", mode: "login", returnTo: safeReturnTo(req.query.returnTo) });
+    if (req.user) return res.redirect("/account");
+    res.render("auth", { title: "Вход — SGCB", description: "Войдите в аккаунт SGCB", mode: "login", returnTo: safeReturnTo(req.query.returnTo, "/account") });
   });
 
   router.post("/login", authLimiter, asyncHandler(async (req, res) => {
-    if (req.user) return res.redirect("/");
+    if (req.user) return res.redirect("/account");
     const email = normalizeEmail(req.body.email);
     const password = String(req.body.password || "");
-    const returnTo = safeReturnTo(req.body.returnTo);
+    const returnTo = safeReturnTo(req.body.returnTo, "/account");
     const user = await db.user.findUnique({ where: { email } });
     if (!user || !(await verifyPassword(password, user.passwordHash))) {
       return res.status(401).render("auth", { title: "Вход — SGCB", description: "Войдите в аккаунт SGCB", mode: "login", returnTo, formError: "Неверный e-mail или пароль." });

@@ -103,8 +103,30 @@ document.addEventListener("click", (event) => {
   }
   if (event.target.closest("[data-cart-open]")) cartOverlay?.classList.remove("hidden");
   if (event.target.closest("[data-cart-close]") || event.target === cartOverlay) cartOverlay?.classList.add("hidden");
-  if (event.target.closest("[data-checkout-open]")) { cartOverlay?.classList.add("hidden"); checkoutOverlay?.classList.remove("hidden"); }
+  if (event.target.closest("[data-checkout-open]")) { cartOverlay?.classList.add("hidden"); checkoutOverlay?.classList.remove("hidden"); loadCheckoutAddresses(); }
   if (event.target.closest("[data-checkout-close]") || event.target === checkoutOverlay) checkoutOverlay?.classList.add("hidden");
+});
+
+async function loadCheckoutAddresses() {
+  const select = document.querySelector("[data-checkout-address]");
+  if (!select) return;
+  try {
+    const response = await fetch("/api/account/addresses");
+    if (!response.ok) return;
+    const addresses = await response.json();
+    select.replaceChildren(new Option("Выбрать адрес или уточнить в комментарии", ""));
+    for (const address of addresses) select.add(new Option(`${address.label}: ${address.line}`, address.id, address.isDefault, address.isDefault));
+    if (!addresses.length) select.add(new Option("Сначала добавьте адрес в личном кабинете", "", true, true));
+  } catch {}
+}
+
+document.querySelector('[data-checkout-form] select[name="delivery"]')?.addEventListener("change", (event) => {
+  const label = document.querySelector("[data-checkout-address-label]");
+  if (label) label.classList.toggle("hidden", event.target.value !== "Доставка по России");
+  if (event.target.value !== "Доставка по России") {
+    const select = document.querySelector("[data-checkout-address]");
+    if (select) select.value = "";
+  }
 });
 
 document.addEventListener("keydown", (event) => {

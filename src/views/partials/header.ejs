@@ -1,3 +1,4 @@
+<div class="site-header">
 <div class="benefit-bar">
   <div class="layout-container benefit-bar-inner">
     <div class="benefit"><img src="/assets/benefit-delivery.png" alt="" /><span>Быстрая доставка по всей России</span></div>
@@ -21,8 +22,8 @@
     </nav>
     <div class="header-actions">
       <% if (user) { %>
-        <% if (user.role === 'ADMIN') { %><a class="account-link" href="/admin">Админ</a><% } %>
-        <span class="account-name"><%= user.name %></span>
+        <% if (user.role === 'ADMIN') { %><a class="account-link admin-link" href="/admin">Админ</a><% } %>
+        <a class="account-name" href="/account" aria-label="Личный кабинет"><%= user.name %></a>
         <form action="/logout" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>" /><button class="logout-link">Выйти</button></form>
       <% } else { %>
         <a class="account-link" href="/login">Войти</a>
@@ -31,3 +32,4 @@
     </div>
   </div>
 </header>
+</div>

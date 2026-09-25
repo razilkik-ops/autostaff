@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { Router } from "express";
 import { asyncHandler } from "../lib/async-handler.js";
 import { cleanText, normalizeEmail } from "../lib/format.js";
+import { addressLine } from "../lib/address.js";
 import { requireUser } from "../lib/security.js";
 
 function orderNumber() {
@@ -49,7 +50,13 @@ export function interactionRoutes(db, config) {
     const customerName = cleanText(req.body.customerName, 80);
     const phone = cleanText(req.body.phone, 32);
     const email = normalizeEmail(req.body.email);
-    const delivery = cleanText(req.body.delivery, 120);
+    let delivery = cleanText(req.body.delivery, 120);
+    if (req.body.addressId) {
+      if (!req.user || delivery !== "Доставка по России") return res.status(422).json({ error: "Сохранённый адрес доступен только для доставки в аккаунте." });
+      const address = await db.address.findFirst({ where: { id: String(req.body.addressId), userId: req.user.id } });
+      if (!address) return res.status(422).json({ error: "Выберите свой сохранённый адрес." });
+      delivery = cleanText(`Доставка: ${addressLine(address)}`, 250);
+    }
     const comment = cleanText(req.body.comment, 600);
     const requested = Array.isArray(req.body.items) ? req.body.items.slice(0, 30) : [];
     const quantities = new Map(requested.map((item) => [String(item.productId), Math.max(1, Math.min(99, Number.parseInt(item.quantity, 10) || 1))]));

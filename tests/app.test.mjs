@@ -120,6 +120,29 @@ test("регистрация, сессия, лайки, комментарии, 
   assert.ok(createdUser);
   assert.notEqual(createdUser.passwordHash, "Integration-Password-2026!");
 
+  const accountPage = await request(baseUrl, jar, "/account/orders");
+  assert.equal(accountPage.status, 200);
+  assert.match(await accountPage.text(), /Мои заказы/);
+  const addAddress = await request(baseUrl, jar, "/account/addresses", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf, label: "Дом", recipient: "Тестовый пользователь", phone: "+7 900 000-00-00", city: "Владимир", street: "ул. Мира, 1", apartment: "кв. 2", postalCode: "600000", isDefault: "on" }),
+  });
+  assert.equal(addAddress.status, 302);
+  const savedAddress = await prisma.address.findFirst({ where: { userId: createdUser.id } });
+  assert.ok(savedAddress);
+  assert.equal(savedAddress.isDefault, true);
+  const addressList = await request(baseUrl, jar, "/api/account/addresses");
+  assert.equal(addressList.status, 200);
+  assert.equal((await addressList.json())[0].label, "Дом");
+  const editAddress = await request(baseUrl, jar, `/account/addresses/${savedAddress.id}`, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf, label: "Работа", recipient: "Тестовый пользователь", phone: "+7 900 000-00-00", city: "Владимир", street: "ул. Мира, 2", apartment: "", postalCode: "600000", isDefault: "on" }),
+  });
+  assert.equal(editAddress.status, 302);
+  assert.equal((await prisma.address.findUnique({ where: { id: savedAddress.id } })).street, "ул. Мира, 2");
+
   const articlePage = await request(baseUrl, jar, `/blog/${article.slug}`);
   assert.equal(articlePage.status, 200);
   const articleHtml = await articlePage.text();
@@ -175,7 +198,8 @@ test("регистрация, сессия, лайки, комментарии, 
       customerName: "Тестовый пользователь",
       phone: "+7 900 000-00-00",
       email,
-      delivery: "Самовывоз во Владимире",
+      delivery: "Доставка по России",
+      addressId: savedAddress.id,
       items: [{ productId: product.id, quantity: 2, price: 1 }],
     }),
   });
@@ -183,6 +207,9 @@ test("регистрация, сессия, лайки, комментарии, 
   const orderResult = await order.json();
   createdOrder = await prisma.order.findUnique({ where: { number: orderResult.number }, include: { items: true } });
   assert.equal(Number(createdOrder.total), Number(product.price) * 2, "цена должна браться из БД, а не из браузера");
+  assert.match(createdOrder.delivery, /Владимир, ул. Мира, 2/);
+  const ordersPage = await request(baseUrl, jar, "/account/orders");
+  assert.match(await ordersPage.text(), new RegExp(createdOrder.number));
   assert.equal((await prisma.product.findUnique({ where: { id: product.id } })).stock, product.stock - 2, "остаток должен списываться внутри транзакции");
 
   const forbidden = await request(baseUrl, jar, "/admin");
@@ -202,6 +229,28 @@ test("регистрация, сессия, лайки, комментарии, 
   createdCategory = await prisma.category.findUnique({ where: { slug: categorySlug } });
   assert.ok(createdCategory, "администратор должен создавать категории каталога");
 
+  const wrongPassword = await request(baseUrl, jar, "/account/settings/password", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf, currentPassword: "wrong", newPassword: "Changed-Password-2026!", confirmPassword: "Changed-Password-2026!" }),
+  });
+  assert.equal(wrongPassword.status, 422);
+  const changePassword = await request(baseUrl, jar, "/account/settings/password", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf, currentPassword: "Integration-Password-2026!", newPassword: "Changed-Password-2026!", confirmPassword: "Changed-Password-2026!" }),
+  });
+  assert.equal(changePassword.status, 302);
+  assert.equal(changePassword.headers.get("location").startsWith("/account/settings"), true);
+  assert.equal((await request(baseUrl, jar, "/account/settings")).status, 200);
+  const removeAddress = await request(baseUrl, jar, `/account/addresses/${savedAddress.id}/delete`, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf }),
+  });
+  assert.equal(removeAddress.status, 302);
+  assert.equal(await prisma.address.count({ where: { userId: createdUser.id } }), 0);
+
   const anonymousJar = new Map();
   const anonymousPage = await request(baseUrl, anonymousJar, `/blog/${article.slug}`);
   const anonymousCsrf = csrfFrom(await anonymousPage.text());
@@ -211,4 +260,7 @@ test("регистрация, сессия, лайки, комментарии, 
     body: "{}",
   });
   assert.equal(anonymousLike.status, 401);
+  const anonymousAccount = await request(baseUrl, anonymousJar, "/account/orders");
+  assert.equal(anonymousAccount.status, 302);
+  assert.match(anonymousAccount.headers.get("location"), /^\/login\?returnTo=/);
 });

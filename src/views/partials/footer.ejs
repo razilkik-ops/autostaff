@@ -29,6 +29,7 @@
       <label>Телефон<input name="phone" type="tel" required maxlength="32" placeholder="+7 900 000-00-00" /></label>
       <label>E-mail<input name="email" type="email" maxlength="254" value="<%= user?.email || '' %>" placeholder="mail@example.ru" /></label>
       <label>Способ получения<select name="delivery"><option>Доставка по России</option><option>Самовывоз во Владимире</option></select></label>
+      <% if (user) { %><label data-checkout-address-label>Сохранённый адрес<select name="addressId" data-checkout-address><option value="">Выбрать адрес или уточнить в комментарии</option></select></label><% } %>
       <label>Комментарий<textarea name="comment" maxlength="600" placeholder="Детали заказа"></textarea></label>
       <p class="form-error hidden" data-checkout-error></p>
       <button class="submit-order">Отправить заказ →</button>
@@ -36,6 +37,6 @@
   </section>
 </div>
 <div class="toast hidden" data-toast></div>
-<script src="/js/app.js" defer></script>
+<script src="/js/app.js?v=20260925-account" defer></script>
 </body>
 </html>
