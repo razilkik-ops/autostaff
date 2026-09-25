@@ -6,6 +6,8 @@ import { requireAdmin } from "../lib/security.js";
 
 const bool = (value) => value === "on" || value === "true" || value === true;
 const slug = (value) => slugify(cleanText(value, 180), { lower: true, strict: true, locale: "ru" });
+const validPrice = (value) => String(value ?? "").trim() !== "" && Number.isFinite(Number(value)) && Number(value) >= 0;
+const validStock = (value) => String(value ?? "").trim() !== "" && Number.isInteger(Number(value)) && Number(value) >= 0;
 
 function articleData(body, userId, existing = null) {
   const published = bool(body.published);
@@ -25,7 +27,7 @@ function articleData(body, userId, existing = null) {
 }
 
 function productData(body) {
-  const image = cleanText(body.image, 500) || "/assets/detailing-bucket.png";
+  const images = parseImages(body.images, cleanText(body.image, 500));
   return {
     name: cleanText(body.name, 180),
     shortName: cleanText(body.shortName || body.name, 120),
@@ -34,8 +36,8 @@ function productData(body) {
     sku: cleanText(body.sku, 80).toUpperCase(),
     description: cleanText(body.description, 3000),
     price: Math.max(0, Number(body.price) || 0),
-    image,
-    images: parseImages(body.images, image),
+    image: images[0] || "",
+    images,
     stock: Math.max(0, Number.parseInt(body.stock, 10) || 0),
     published: bool(body.published),
     specs: parseSpecs(body.specs),
@@ -66,9 +68,9 @@ export function adminRoutes(db) {
 
   router.post("/admin/products", asyncHandler(async (req, res) => {
     const data = productData(req.body);
-    if (!data.name || !data.slug || !data.sku || !data.categoryId) {
+    if (!data.name || !data.slug || !data.sku || !data.categoryId || !data.description || !data.image || !validPrice(req.body.price) || !validStock(req.body.stock) || !await db.category.findUnique({ where: { id: data.categoryId } })) {
       const categories = await db.category.findMany({ orderBy: { name: "asc" } });
-      return res.status(422).render("admin/product-form", { title: "Новый товар — SGCB Admin", description: "Создание товара", product: { ...data, specs: data.specs }, categories, formError: "Заполните название, slug, артикул и категорию." });
+      return res.status(422).render("admin/product-form", { title: "Новый товар — SGCB Admin", description: "Создание товара", product: { ...data, specs: data.specs }, categories, formError: "Заполните название, цену, описание, категорию и добавьте хотя бы одно фото." });
     }
     await db.product.create({ data });
     res.redirect("/admin/products?success=Товар создан");
@@ -81,7 +83,13 @@ export function adminRoutes(db) {
   }));
 
   router.post("/admin/products/:id", asyncHandler(async (req, res) => {
-    await db.product.update({ where: { id: req.params.id }, data: productData(req.body) });
+    const [existing, categories] = await Promise.all([db.product.findUnique({ where: { id: req.params.id } }), db.category.findMany({ orderBy: { name: "asc" } })]);
+    if (!existing) return res.status(404).render("error", { title: "Товар не найден", status: 404, message: "Товар уже удалён." });
+    const data = productData(req.body);
+    if (!data.name || !data.slug || !data.sku || !data.categoryId || !data.description || !data.image || !validPrice(req.body.price) || !validStock(req.body.stock) || !await db.category.findUnique({ where: { id: data.categoryId } })) {
+      return res.status(422).render("admin/product-form", { title: "Редактирование товара — SGCB Admin", description: "Редактирование товара", product: { ...existing, ...data }, categories, formError: "Заполните название, цену, описание, категорию и добавьте хотя бы одно фото." });
+    }
+    await db.product.update({ where: { id: req.params.id }, data });
     res.redirect("/admin/products?success=Товар обновлён");
   }));
 
@@ -141,7 +149,12 @@ export function adminRoutes(db) {
   router.post("/admin/articles/:id", asyncHandler(async (req, res) => {
     const existing = await db.article.findUnique({ where: { id: req.params.id } });
     if (!existing) return res.status(404).render("error", { title: "Материал не найден", status: 404, message: "Материал уже удалён." });
-    await db.article.update({ where: { id: req.params.id }, data: articleData(req.body, req.user.id, existing) });
+    const data = articleData(req.body, req.user.id, existing);
+    if (!data.title || !data.slug || !data.description || !data.body) {
+      const products = await db.product.findMany({ orderBy: { name: "asc" } });
+      return res.status(422).render("admin/article-form", { title: "Редактирование материала — SGCB Admin", description: "Редактирование материала", article: { ...existing, ...data }, products, formError: "Заполните заголовок, SEO-описание и текст материала." });
+    }
+    await db.article.update({ where: { id: req.params.id }, data });
     res.redirect("/admin/articles?success=Материал обновлён");
   }));
 

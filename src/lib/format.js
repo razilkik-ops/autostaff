@@ -53,11 +53,11 @@ export function parseImages(value, fallback = "") {
     .split("\n")
     .map((item) => cleanText(item, 500))
     .filter(Boolean);
-  if (fallback && !images.includes(fallback)) images.unshift(fallback);
+  if (!images.length && fallback) images.push(fallback);
   return [...new Set(images)].slice(0, 8);
 }
 
 export function imagesToText(value, fallback = "") {
   const images = Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
-  return [...new Set(fallback ? [fallback, ...images] : images)].join("\n");
+  return [...new Set(images.length ? images : fallback ? [fallback] : [])].join("\n");
 }

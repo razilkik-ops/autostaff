@@ -9,6 +9,7 @@ import { articlePath, formatDate, formatDateTime, formatMoney, imagesToText, par
 import { csrfMiddleware, requireCsrf, sessionMiddleware } from "./lib/security.js";
 import { adminRoutes } from "./routes/admin.js";
 import { accountRoutes } from "./routes/account.js";
+import { adminMediaRoutes } from "./routes/admin-media.js";
 import { authRoutes } from "./routes/auth.js";
 import { interactionRoutes } from "./routes/interactions.js";
 import { publicRoutes } from "./routes/public.js";
@@ -73,6 +74,7 @@ export function createApp({ db, config = defaultConfig }) {
   app.use(authRoutes(db, config));
   app.use(accountRoutes(db, config));
   app.use(interactionRoutes(db, config));
+  app.use(adminMediaRoutes());
   app.use(adminRoutes(db));
   app.use(publicRoutes(db));
 

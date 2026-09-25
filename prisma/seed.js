@@ -34,7 +34,7 @@ const articles = [
 async function main() {
   const categoryMap = new Map();
   for (const [name, slug, image, description] of categories) {
-    const category = await prisma.category.upsert({ where: { slug }, update: { name, image, description }, create: { name, slug, image, description, sortOrder: categoryMap.size } });
+    const category = await prisma.category.upsert({ where: { slug }, update: {}, create: { name, slug, image, description, sortOrder: categoryMap.size } });
     categoryMap.set(slug, category);
   }
 
@@ -43,7 +43,7 @@ async function main() {
     const { category, ...data } = product;
     const saved = await prisma.product.upsert({
       where: { slug: data.slug },
-      update: { ...data, categoryId: categoryMap.get(category).id },
+      update: {},
       create: { ...data, categoryId: categoryMap.get(category).id },
     });
     productMap.set(saved.slug, saved);
@@ -63,7 +63,7 @@ async function main() {
     const { product, ...data } = article;
     await prisma.article.upsert({
       where: { slug: data.slug },
-      update: { ...data, published: true, publishedAt: new Date(), productId: productMap.get(product)?.id, authorId: admin?.id },
+      update: {},
       create: { ...data, published: true, publishedAt: new Date(), productId: productMap.get(product)?.id, authorId: admin?.id },
     });
   }

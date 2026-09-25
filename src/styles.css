@@ -503,13 +503,35 @@ footer { color: #dae3ee; background: #051424; }
 .admin-form { padding: 24px; border-radius: 8px; background: white; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .form-grid label { display: grid; gap: 6px; color: #304158; font-size: 11px; font-weight: 700; }
-.form-grid label.wide { grid-column: 1 / -1; }
+.form-grid > .wide { grid-column: 1 / -1; }
 .form-grid label small { color: #8592a3; font-weight: 400; }
 .form-grid input, .form-grid select, .form-grid textarea, .admin-inline-form input { width: 100%; padding: 11px; border: 1px solid #cbd7e4; border-radius: 4px; outline: 0; background: white; font-size: 12px; }
 .form-grid textarea { resize: vertical; line-height: 1.55; }
 .form-grid .check { display: flex; align-items: center; gap: 8px; }
 .form-grid .check input { width: auto; }
 .admin-submit { margin-top: 22px; padding: 12px 18px; border-radius: 4px; color: white; background: var(--blue); font-size: 12px; font-weight: 800; }
+.visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
+.admin-photo-editor, .admin-hero-editor { min-width: 0; padding: 18px; border: 1px solid #d5e2ef; border-radius: 8px; background: #f8fbff; }
+.admin-photo-heading strong { display: block; font-size: 15px; }
+.admin-photo-heading small { display: block; margin-top: 5px; color: #657991; font-size: 12px; line-height: 1.4; }
+.admin-photo-list { margin-top: 15px; display: grid; gap: 8px; }
+.admin-photo-empty { margin: 0; padding: 18px; border: 1px dashed #b8cce2; border-radius: 6px; color: #667b94; font-size: 13px; }
+.admin-photo-row { min-width: 0; padding: 8px; display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; align-items: center; gap: 12px; border: 1px solid #d9e3ef; border-radius: 6px; background: white; }
+.admin-photo-row img { width: 72px; height: 60px; object-fit: contain; border-radius: 4px; background: #f2f5f9; }
+.admin-photo-row > div:nth-child(2) { min-width: 0; }
+.admin-photo-row strong { display: block; font-size: 13px; }
+.admin-photo-row small { display: block; margin-top: 4px; overflow: hidden; color: #74859a; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.admin-photo-row-actions { display: flex; gap: 5px; }
+.admin-photo-row-actions button { min-width: 32px; padding: 7px; border-radius: 4px; color: #1c62ae; background: #edf5ff; font-size: 13px; }
+.admin-photo-row-actions button:disabled { opacity: .35; cursor: default; }
+.admin-photo-row-actions button:last-child { color: #a53042; background: #fff0f2; font-size: 11px; }
+.admin-photo-controls { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 10px; }
+.admin-photo-controls label, .admin-hero-editor label { display: grid; gap: 6px; color: #304158; font-size: 12px; font-weight: 700; }
+.admin-photo-controls input, .admin-hero-editor input { width: 100%; min-width: 0; padding: 10px; border: 1px solid #cbd7e4; border-radius: 4px; background: white; font-size: 13px; }
+.admin-photo-controls button { padding: 11px 13px; border-radius: 4px; color: white; background: var(--blue); font-size: 12px; font-weight: 700; }
+.admin-photo-note, .admin-photo-message { margin: 10px 0 0; color: #687b91; font-size: 12px; }
+.admin-photo-message:not(:empty) { color: #155da8; }
+.admin-hero-editor img { width: min(100%, 340px); height: 150px; margin: 12px 0; object-fit: cover; border-radius: 6px; background: #e8eef6; }
 .admin-inline-form { margin-bottom: 18px; padding: 15px; display: grid; grid-template-columns: 1fr .8fr 1.5fr 1.2fr 90px auto; gap: 9px; border-radius: 8px; background: white; }
 .admin-inline-form button, .admin-category-list button, .admin-orders form button { padding: 9px 12px; border-radius: 4px; color: white; background: var(--blue); font-size: 11px; font-weight: 700; }
 .admin-category-list { display: grid; gap: 10px; }

@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { unlink } from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
 import { createApp } from "../src/app.js";
 import { config } from "../src/config.js";
@@ -38,6 +40,9 @@ test("регистрация, сессия, лайки, комментарии, 
   let createdUser;
   let createdOrder;
   let createdCategory;
+  let createdProduct;
+  let createdArticle;
+  let uploadedFile;
   const article = await prisma.article.findFirst({ where: { published: true }, orderBy: { createdAt: "asc" } });
   const product = await prisma.product.findFirst({ where: { published: true, stock: { gt: 1 } }, orderBy: { createdAt: "asc" } });
   assert.ok(article, "перед тестом выполните npm run db:seed");
@@ -94,7 +99,10 @@ test("регистрация, сессия, лайки, комментарии, 
     await prisma.user.deleteMany({ where: { email } });
     if (createdOrder) await prisma.order.deleteMany({ where: { id: createdOrder.id } });
     if (createdOrder) await prisma.product.update({ where: { id: product.id }, data: { stock: { increment: 2 } } });
+    if (createdArticle) await prisma.article.deleteMany({ where: { id: createdArticle.id } });
+    if (createdProduct) await prisma.product.deleteMany({ where: { id: createdProduct.id } });
     if (createdCategory) await prisma.category.deleteMany({ where: { id: createdCategory.id } });
+    if (uploadedFile) await unlink(path.resolve(`public${uploadedFile}`)).catch(() => {});
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   });
 
@@ -214,6 +222,9 @@ test("регистрация, сессия, лайки, комментарии, 
 
   const forbidden = await request(baseUrl, jar, "/admin");
   assert.equal(forbidden.status, 403);
+  const forbiddenUpload = new FormData();
+  forbiddenUpload.append("photo", new Blob([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])], { type: "image/png" }), "sample.png");
+  assert.equal((await request(baseUrl, jar, "/admin/media", { method: "POST", headers: { "x-csrf-token": csrf }, body: forbiddenUpload })).status, 403);
 
   await prisma.user.update({ where: { id: createdUser.id }, data: { role: "ADMIN" } });
   const admin = await request(baseUrl, jar, "/admin");
@@ -228,6 +239,79 @@ test("регистрация, сессия, лайки, комментарии, 
   assert.equal(createCategory.status, 302);
   createdCategory = await prisma.category.findUnique({ where: { slug: categorySlug } });
   assert.ok(createdCategory, "администратор должен создавать категории каталога");
+
+  const photo = new FormData();
+  photo.append("photo", new Blob([Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/RWsAAAAASUVORK5CYII=", "base64")], { type: "image/png" }), "sample.png");
+  const upload = await request(baseUrl, jar, "/admin/media", { method: "POST", headers: { "x-csrf-token": csrf }, body: photo });
+  assert.equal(upload.status, 201);
+  uploadedFile = (await upload.json()).url;
+  assert.match(uploadedFile, /^\/uploads\/[0-9a-f-]+\.png$/);
+  assert.equal((await request(baseUrl, jar, uploadedFile)).status, 200);
+  const invalidPhoto = new FormData();
+  invalidPhoto.append("photo", new Blob([Buffer.from("not an image")], { type: "image/png" }), "fake.png");
+  assert.equal((await request(baseUrl, jar, "/admin/media", { method: "POST", headers: { "x-csrf-token": csrf }, body: invalidPhoto })).status, 422);
+
+  const testProductSlug = `test-product-${unique}`;
+  const createProduct = await request(baseUrl, jar, "/admin/products", {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf, name: "Тестовый товар", shortName: "Товар", slug: testProductSlug, brand: "SGCB", sku: `TEST-${unique}`, price: "1234", stock: "3", categoryId: createdCategory.id, images: [uploadedFile, "/assets/detailing-bucket.png", "/assets/drying-towel.png"].join("\n"), description: "Первое описание", specs: "Цвет: Синий", published: "on" }),
+  });
+  assert.equal(createProduct.status, 302);
+  createdProduct = await prisma.product.findUnique({ where: { slug: testProductSlug } });
+  assert.ok(createdProduct);
+  assert.equal(createdProduct.image, uploadedFile);
+  assert.deepEqual(createdProduct.images, [uploadedFile, "/assets/detailing-bucket.png", "/assets/drying-towel.png"]);
+  assert.equal(createdProduct.categoryId, createdCategory.id);
+  const newProductPage = await request(baseUrl, jar, `/product/${testProductSlug}`);
+  assert.equal(newProductPage.status, 200);
+  assert.match(await newProductPage.text(), new RegExp(`data-gallery-main[^>]+src="${uploadedFile}"|src="${uploadedFile}"[^>]+data-gallery-main`));
+  assert.equal((await request(baseUrl, jar, `/admin/products/${createdProduct.id}/edit`)).status, 200);
+
+  const updateProduct = await request(baseUrl, jar, `/admin/products/${createdProduct.id}`, {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf, name: "Тестовый товар обновлён", shortName: "Товар", slug: testProductSlug, brand: "SGCB", sku: `TEST-${unique}`, price: "4321", stock: "3", categoryId: category.id, images: ["/assets/drying-towel.png", uploadedFile, "/assets/detailing-bucket.png"].join("\n"), description: "Новое описание", specs: "Цвет: Красный", published: "on" }),
+  });
+  assert.equal(updateProduct.status, 302);
+  createdProduct = await prisma.product.findUnique({ where: { id: createdProduct.id } });
+  assert.equal(createdProduct.image, "/assets/drying-towel.png", "первая фотография становится основной");
+  assert.deepEqual(createdProduct.images, ["/assets/drying-towel.png", uploadedFile, "/assets/detailing-bucket.png"]);
+  assert.equal(createdProduct.categoryId, category.id, "товар можно перенести в другую категорию");
+  assert.equal(Number(createdProduct.price), 4321);
+  assert.equal(createdProduct.description, "Новое описание");
+
+  const blogSlug = `test-blog-${unique}`;
+  const newsSlug = `test-news-${unique}`;
+  const createBlog = await request(baseUrl, jar, "/admin/articles", {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf, type: "BLOG", productId: createdProduct.id, title: "Тестовая статья", slug: blogSlug, description: "Описание статьи", heroImage: uploadedFile, body: "Первый раздел\nТекст для блога.", published: "on" }),
+  });
+  assert.equal(createBlog.status, 302);
+  createdArticle = await prisma.article.findUnique({ where: { slug: blogSlug } });
+  assert.ok(createdArticle);
+  assert.equal((await request(baseUrl, jar, `/admin/articles/${createdArticle.id}/edit`)).status, 200);
+  const blogPage = await request(baseUrl, jar, `/blog/${blogSlug}`);
+  assert.equal(blogPage.status, 200);
+  assert.match(await blogPage.text(), /Текст для блога/);
+
+  const updateNews = await request(baseUrl, jar, `/admin/articles/${createdArticle.id}`, {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf, type: "NEWS", productId: createdProduct.id, title: "Тестовая новость", slug: newsSlug, description: "Новое SEO-описание", heroImage: uploadedFile, body: "Раздел новости\nОбновлённый текст новости.", published: "on" }),
+  });
+  assert.equal(updateNews.status, 302);
+  createdArticle = await prisma.article.findUnique({ where: { id: createdArticle.id } });
+  assert.equal(createdArticle.type, "NEWS");
+  assert.equal(createdArticle.description, "Новое SEO-описание");
+  assert.equal((await request(baseUrl, jar, `/blog/${blogSlug}`)).status, 404);
+  const newsPage = await request(baseUrl, jar, `/news/${newsSlug}`);
+  assert.equal(newsPage.status, 200);
+  assert.match(await newsPage.text(), /Обновлённый текст новости/);
+  assert.equal((await request(baseUrl, jar, "/admin/articles")).status, 200);
+  const hideNews = await request(baseUrl, jar, `/admin/articles/${createdArticle.id}`, {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ _csrf: csrf, type: "NEWS", productId: createdProduct.id, title: "Тестовая новость", slug: newsSlug, description: "Новое SEO-описание", heroImage: uploadedFile, body: "Раздел новости\nОбновлённый текст новости." }),
+  });
+  assert.equal(hideNews.status, 302);
+  assert.equal((await request(baseUrl, jar, `/news/${newsSlug}`)).status, 404, "черновик не должен показываться покупателям");
 
   const wrongPassword = await request(baseUrl, jar, "/account/settings/password", {
     method: "POST",

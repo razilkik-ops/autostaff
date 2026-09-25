@@ -1,5 +1,34 @@
 <%- include('partials/head') %>
-<div class="admin-page-head"><div><span>Каталог</span><h1><%= product ? 'Редактирование товара' : 'Новый товар' %></h1></div><a class="secondary" href="/admin/products">← Назад</a></div>
+<div class="admin-page-head"><div><span>Каталог</span><h1><%= product?.id ? 'Редактирование товара' : 'Новый товар' %></h1></div><a class="secondary" href="/admin/products">← Назад</a></div>
 <% if (formError) { %><div class="admin-alert error"><%= formError %></div><% } %>
-<form class="admin-form" action="<%= product?.id ? `/admin/products/${product.id}` : '/admin/products' %>" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>" /><div class="form-grid"><label class="wide">Название<input name="name" required maxlength="180" value="<%= product?.name || '' %>" /></label><label>Короткое название<input name="shortName" maxlength="120" value="<%= product?.shortName || '' %>" /></label><label>Slug<input name="slug" maxlength="180" value="<%= product?.slug || '' %>" placeholder="создастся автоматически" /></label><label>Бренд<input name="brand" maxlength="80" value="<%= product?.brand || 'SGCB' %>" /></label><label>Артикул<input name="sku" required maxlength="80" value="<%= product?.sku || '' %>" /></label><label>Цена, ₽<input name="price" type="number" min="0" step="0.01" required value="<%= product ? Number(product.price) : '' %>" /></label><label>Остаток<input name="stock" type="number" min="0" required value="<%= product?.stock ?? 0 %>" /></label><label>Категория<select name="categoryId" required><option value="">Выберите</option><% categories.forEach(category => { %><option value="<%= category.id %>" <%= product?.categoryId === category.id ? 'selected' : '' %>><%= category.name %></option><% }) %></select></label><label class="wide">Основное изображение<input name="image" required value="<%= product?.image || '/assets/' %>" /></label><label class="wide">Галерея <small>Один путь к изображению на строку, до 8 фотографий</small><textarea name="images" rows="5"><%= imagesToText(product?.images, product?.image) %></textarea></label><label class="wide">Описание<textarea name="description" required rows="5"><%= product?.description || '' %></textarea></label><label class="wide">Характеристики <small>Одна строка: Название: Значение</small><textarea name="specs" rows="7"><%= specsToText(product?.specs) %></textarea></label><label class="check"><input name="published" type="checkbox" <%= product?.published ?? true ? 'checked' : '' %> /> Опубликовать</label></div><button class="admin-submit"><%= product ? 'Сохранить изменения' : 'Создать товар' %></button></form>
+<form class="admin-form" action="<%= product?.id ? `/admin/products/${product.id}` : '/admin/products' %>" method="post">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <div class="form-grid">
+    <label class="wide">Название<input name="name" required maxlength="180" value="<%= product?.name || '' %>" /></label>
+    <label>Короткое название<input name="shortName" maxlength="120" value="<%= product?.shortName || '' %>" /></label>
+    <label>Slug<input name="slug" maxlength="180" value="<%= product?.slug || '' %>" placeholder="создастся автоматически" /></label>
+    <label>Бренд<input name="brand" maxlength="80" value="<%= product?.brand || 'SGCB' %>" /></label>
+    <label>Артикул<input name="sku" required maxlength="80" value="<%= product?.sku || '' %>" /></label>
+    <label>Цена, ₽<input name="price" type="number" min="0" step="0.01" required value="<%= product ? Number(product.price) : '' %>" /></label>
+    <label>Остаток<input name="stock" type="number" min="0" required value="<%= product?.stock ?? 0 %>" /></label>
+    <label>Категория<select name="categoryId" required><option value="">Выберите категорию</option><% categories.forEach(category => { %><option value="<%= category.id %>" <%= product?.categoryId === category.id ? 'selected' : '' %>><%= category.name %></option><% }) %></select></label>
+    <div class="admin-photo-editor wide" data-admin-photo-editor>
+      <div class="admin-photo-heading"><div><strong>Фотографии товара</strong><small>До 8 фотографий. Первая — основная в каталоге и карточке товара. Меняйте порядок стрелками.</small></div></div>
+      <textarea name="images" data-photo-values class="visually-hidden"><%= imagesToText(product?.images, product?.image) %></textarea>
+      <div class="admin-photo-list" data-photo-list></div>
+      <div class="admin-photo-controls">
+        <label>Загрузить фото с компьютера<input type="file" accept="image/jpeg,image/png,image/webp" data-photo-upload /></label>
+        <label>Или добавить ссылку / путь<input data-photo-url placeholder="https://… или /assets/…" /></label>
+        <button type="button" data-photo-add>Добавить ссылку</button>
+      </div>
+      <p class="admin-photo-note">JPEG, PNG или WebP до 5 МБ. Ссылки можно вставлять вместо загрузки.</p>
+      <p class="admin-photo-message" data-photo-message role="status" aria-live="polite"></p>
+    </div>
+    <label class="wide">Описание<textarea name="description" required rows="5"><%= product?.description || '' %></textarea></label>
+    <label class="wide">Характеристики <small>Одна строка: Название: Значение</small><textarea name="specs" rows="7"><%= specsToText(product?.specs) %></textarea></label>
+    <label class="check"><input name="published" type="checkbox" <%= product?.published ?? true ? 'checked' : '' %> /> Опубликовать</label>
+  </div>
+  <button class="admin-submit"><%= product?.id ? 'Сохранить изменения' : 'Создать товар' %></button>
+</form>
+<script src="/js/admin-media.js?v=20260925-gallery" defer></script>
 <%- include('partials/foot') %>
