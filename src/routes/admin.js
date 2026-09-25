@@ -15,7 +15,7 @@ function articleData(body, userId, existing = null) {
     slug: slug(body.slug || body.title),
     description: cleanText(body.description, 500),
     body: cleanText(body.body, 30000),
-    heroImage: cleanText(body.heroImage, 500) || "/assets/sgcb-tools-banner.jpg",
+    heroImage: cleanText(body.heroImage, 500) || "/assets/sgcb-tools-banner-ru.jpg",
     videoUrl: cleanText(body.videoUrl, 500) || null,
     published,
     publishedAt: published ? existing?.publishedAt || new Date() : null,

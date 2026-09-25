@@ -12,6 +12,6 @@
   <section class="categories" id="categories"><div class="section-title-row"><h2>КАТЕГОРИИ ТОВАРОВ</h2><a href="#categories">Все направления SGCB →</a></div><div class="category-grid"><% categories.forEach(category => { %><a class="category-card" href="/catalog/<%= category.slug %>"><img src="<%= category.image %>" alt="<%= category.name %> SGCB" /><span><%= category.name %></span></a><% }) %></div></section>
   <section class="products" id="catalog"><div class="products-heading"><h2>ПОПУЛЯРНЫЕ ТОВАРЫ</h2><div class="tabs"><span class="active">Хиты продаж</span><span>Новинки</span><span>Акции</span></div></div><div class="product-grid"><% products.forEach(product => { %><%- include('partials/product-card', { product }) %><% }) %></div></section>
   <section class="knowledge"><div class="section-title-row"><div><h2>ПОЛЕЗНОЕ О ДЕТЕЙЛИНГЕ</h2><p>Практические статьи и новости индустрии</p></div><a href="/blog">Все статьи →</a></div><div class="article-grid"><% articles.forEach(article => { %><%- include('partials/article-card', { article }) %><% }) %></div></section>
-  <a class="promo campaign-promo" href="#catalog"><img src="/assets/sgcb-tools-banner.jpg" alt="Профессиональные инструменты SGCB для детейлинг-студий" /></a>
+  <a class="promo campaign-promo" href="#catalog"><img src="/assets/sgcb-tools-banner-ru.jpg" alt="Профессиональные инструменты SGCB для детейлинг-студий" /></a>
 </div></main>
 <%- include('partials/footer') %>
