@@ -302,7 +302,7 @@ footer { color: #dae3ee; background: #051424; }
 .drawer-head { min-height: 82px; padding: 18px 22px; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--line); }
 .drawer-head > div > span { color: var(--blue); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; }
 .drawer-head h2 { margin: 3px 0 0; font-size: 22px; }
-.drawer-head > button { display: grid; place-items: center; padding: 7px; border-radius: 50%; color: #394a60; background: #eef3f8; }
+.drawer-head > button { width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center; padding: 0; border-radius: 50%; color: #394a60; background: #eef3f8; font-size: 23px; line-height: 1; }
 .empty-cart { margin: auto; padding: 34px; display: flex; flex-direction: column; align-items: center; color: #6f8096; text-align: center; }
 .empty-cart h3 { margin: 15px 0 5px; color: #172231; font-size: 19px; }
 .empty-cart p { margin: 0 0 18px; font-size: 12px; }
@@ -458,9 +458,11 @@ footer { color: #dae3ee; background: #051424; }
 .account-password-form { max-width: 440px; }
 
 .favorite-form { position: absolute; z-index: 2; top: 10px; right: 10px; margin: 0; }
-.favorite-form button, .favorite-login { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #d8e4f0; border-radius: 50%; color: #d73658; background: white; box-shadow: 0 2px 8px rgba(0,0,0,.08); font-size: 23px; line-height: 1; }
-.product-favorite { margin: 13px 0 19px; display: inline-block; color: #bb3150; font-size: 14px; font-weight: 700; }
-.product-favorite button { padding: 0; color: inherit; background: none; font-size: inherit; font-weight: inherit; }
+.favorite-form button, .favorite-login { width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: 1px solid #d8e4f0; border-radius: 50%; background: white; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.favorite-form img { width: 36px; height: 36px; object-fit: contain; }
+.product-favorite { margin: 13px 0 19px; display: inline-flex; align-items: center; color: #bb3150; font-size: 14px; font-weight: 700; }
+.product-favorite button { padding: 0; display: inline-flex; align-items: center; color: inherit; background: none; font-size: inherit; font-weight: inherit; }
+.product-favorite img { width: 32px; height: 32px; object-fit: contain; }
 .product-reviews { margin-top: 42px; padding-top: 25px; border-top: 1px solid var(--line); }
 .product-reviews > p { color: #687a91; font-size: 14px; }
 .product-review-list { margin-top: 20px; display: grid; gap: 12px; }
