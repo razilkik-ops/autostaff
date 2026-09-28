@@ -105,6 +105,7 @@ model Product {
   images      Json?
   stock       Int         @default(0)
   published   Boolean     @default(true)
+  isPromotion Boolean     @default(false)
   specs       Json?
   categoryId  String
   createdAt   DateTime    @default(now())
@@ -252,4 +253,16 @@ model ProductReview {
 
   @@index([productId, status, createdAt])
   @@index([userId])
+}
+
+model Partner {
+  id          String   @id @default(cuid())
+  name        String
+  logo        String?
+  url         String?
+  description String?
+  sortOrder   Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

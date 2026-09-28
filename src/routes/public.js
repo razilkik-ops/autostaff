@@ -2,7 +2,7 @@ import { Router } from "express";
 import { asyncHandler } from "../lib/async-handler.js";
 
 const infoPages = {
-  delivery: ["Доставка и оплата", "Отправляем заказы по всей России транспортными компаниями и курьерскими службами. Стоимость и срок рассчитываются менеджером после подтверждения заказа. Доступны онлайн-оплата и безналичный расчёт для организаций."],
+  delivery: ["Доставка и оплата", "Отправляем заказы по России и Беларуси транспортными компаниями и курьерскими службами. Стоимость и срок рассчитываются менеджером после подтверждения заказа. Доступны онлайн-оплата и безналичный расчёт для организаций."],
   returns: ["Возврат и обмен", "Товар надлежащего качества можно вернуть или обменять в сроки, установленные законодательством РФ, при сохранении упаковки и товарного вида. Для начала возврата свяжитесь с менеджером."],
   questions: ["Вопросы", "Нужна помощь с подбором автохимии, оборудования или плёнки PPF? Напишите нам в Telegram или позвоните — специалист уточнит задачу и предложит подходящий комплект."],
   privacy: ["Политика конфиденциальности", "Мы используем контактные данные только для обработки заказов, обратной связи и подписки, если пользователь дал на неё согласие. Данные не передаются третьим лицам, кроме служб, необходимых для выполнения заказа."],
@@ -13,13 +13,41 @@ export function publicRoutes(db) {
   const router = Router();
 
   router.get("/", asyncHandler(async (req, res) => {
-    const [categories, products, articles] = await Promise.all([
+    const activeTab = ["popular", "new", "sale"].includes(req.query.tab) ? req.query.tab : "popular";
+    const productWhere = { published: true, ...(activeTab === "sale" ? { isPromotion: true } : {}) };
+    const [categories, products, articles, news, partners] = await Promise.all([
       db.category.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
-      db.product.findMany({ where: { published: true }, include: { category: true, _count: { select: { reviews: { where: { status: "VISIBLE" } } } } }, orderBy: { createdAt: "asc" }, take: 12 }),
+      db.product.findMany({ where: productWhere, include: { category: true, _count: { select: { reviews: { where: { status: "VISIBLE" } } } } }, orderBy: { createdAt: activeTab === "new" ? "desc" : "asc" }, take: 12 }),
       db.article.findMany({ where: { type: "BLOG", published: true }, include: { _count: { select: { likes: true, comments: { where: { status: "VISIBLE" } } } } }, orderBy: { publishedAt: "desc" }, take: 3 }),
+      db.article.findMany({ where: { type: "NEWS", published: true }, include: { _count: { select: { likes: true, comments: { where: { status: "VISIBLE" } } } } }, orderBy: { publishedAt: "desc" }, take: 3 }),
+      db.partner.findMany({ where: { published: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], take: 6 }),
     ]);
     const favoriteIds = req.user ? new Set((await db.favorite.findMany({ where: { userId: req.user.id, productId: { in: products.map((product) => product.id) } }, select: { productId: true } })).map((item) => item.productId)) : new Set();
-    res.render("home", { title: "SGCB — профессиональные товары для детейлинга", description: "Профессиональная автохимия, оборудование, микрофибра и защитные плёнки SGCB с доставкой по России.", categories, products, articles, favoriteIds });
+    res.render("home", { title: "SGCB — профессиональные товары для детейлинга", description: "Профессиональная автохимия, оборудование, микрофибра и защитные плёнки SGCB с доставкой по России и Беларуси.", categories, products, articles, news, partners, activeTab, favoriteIds });
+  }));
+
+  router.get("/search", asyncHandler(async (req, res) => {
+    const searchTerm = String(req.query.q || "").trim().slice(0, 100);
+    const products = searchTerm ? await db.product.findMany({
+      where: { published: true, OR: [
+        { name: { contains: searchTerm, mode: "insensitive" } },
+        { shortName: { contains: searchTerm, mode: "insensitive" } },
+        { sku: { contains: searchTerm, mode: "insensitive" } },
+        { description: { contains: searchTerm, mode: "insensitive" } },
+        { category: { name: { contains: searchTerm, mode: "insensitive" } } },
+      ] },
+      include: { category: true, _count: { select: { reviews: { where: { status: "VISIBLE" } } } } },
+      orderBy: { name: "asc" }, take: 60,
+    }) : [];
+    const favoriteIds = req.user ? new Set((await db.favorite.findMany({ where: { userId: req.user.id, productId: { in: products.map((product) => product.id) } }, select: { productId: true } })).map((item) => item.productId)) : new Set();
+    res.render("search", { title: searchTerm ? `Поиск «${searchTerm}» — SGCB` : "Поиск товаров — SGCB", description: "Поиск профессиональных товаров SGCB для детейлинга и ухода за автомобилем.", searchTerm, products, favoriteIds });
+  }));
+
+  router.get("/contacts", (req, res) => res.render("contacts", { title: "Контакты — SGCB", description: "Контакты SGCB во Владимире: ТЦ «Черёмушки», проспект Строителей, 9Б." }));
+
+  router.get("/partners", asyncHandler(async (req, res) => {
+    const partners = await db.partner.findMany({ where: { published: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
+    res.render("partners", { title: "Наши партнёры — SGCB", description: "Партнёры SGCB в сфере детейлинга и ухода за автомобилями.", partners });
   }));
 
   router.get("/catalog/:slug", asyncHandler(async (req, res) => {

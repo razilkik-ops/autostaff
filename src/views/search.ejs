@@ -1,0 +1,4 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<main class="search-page layout-container"><div class="breadcrumbs"><a href="/">Главная</a><span>/</span><span>Поиск</span></div><div class="search-heading"><h1>Поиск товаров</h1><p><% if (searchTerm) { %>По запросу «<%= searchTerm %>» найдено: <%= products.length %><% } else { %>Введите название, артикул или категорию товара в поисковой строке.<% } %></p></div><% if (products.length) { %><div class="product-grid"><% products.forEach(product => { %><%- include('partials/product-card', { product }) %><% }) %></div><% } else if (searchTerm) { %><div class="catalog-empty"><h2>Товары не найдены</h2><p>Попробуйте другое название или артикул.</p><a href="/#categories">Перейти к категориям →</a></div><% } %></main>
+<%- include('partials/footer') %>

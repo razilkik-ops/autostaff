@@ -5,7 +5,7 @@ import express from "express";
 import helmet from "helmet";
 import methodOverride from "method-override";
 import { config as defaultConfig } from "./config.js";
-import { articlePath, formatDate, formatDateTime, formatMoney, imagesToText, paragraphs, specsToText } from "./lib/format.js";
+import { articlePath, excerpt, formatDate, formatDateTime, formatMoney, imagesToText, paragraphs, specsToText } from "./lib/format.js";
 import { csrfMiddleware, requireCsrf, sessionMiddleware } from "./lib/security.js";
 import { adminRoutes } from "./routes/admin.js";
 import { accountRoutes } from "./routes/account.js";
@@ -32,7 +32,7 @@ export function createApp({ db, config = defaultConfig }) {
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:"],
-        frameSrc: ["'self'", "https://www.youtube.com", "https://www.youtube-nocookie.com"],
+        frameSrc: ["'self'", "https://www.youtube.com", "https://www.youtube-nocookie.com", "https://www.openstreetmap.org"],
         connectSrc: ["'self'"],
       },
     },
@@ -54,6 +54,7 @@ export function createApp({ db, config = defaultConfig }) {
     res.locals.formatDateTime = formatDateTime;
     res.locals.articlePath = articlePath;
     res.locals.paragraphs = paragraphs;
+    res.locals.excerpt = excerpt;
     res.locals.specsToText = specsToText;
     res.locals.imagesToText = imagesToText;
     res.locals.siteUrl = config.appUrl;

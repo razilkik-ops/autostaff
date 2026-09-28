@@ -43,6 +43,7 @@ test("регистрация, сессия, лайки, комментарии, 
   let createdCategory;
   let createdProduct;
   let createdArticle;
+  let createdPartner;
   let uploadedFile;
   const article = await prisma.article.findFirst({ where: { published: true }, orderBy: { createdAt: "asc" } });
   const product = await prisma.product.findFirst({ where: { published: true, stock: { gt: 3 } }, orderBy: { createdAt: "asc" } });
@@ -66,7 +67,16 @@ test("регистрация, сессия, лайки, комментарии, 
   assert.equal(homePage.status, 200);
   assert.match(homeHtml, /ТОВАРЫ[\s\S]*ДЛЯ ДЕТЕЙЛИНГА/);
   assert.match(homeHtml, new RegExp(product.name));
+  assert.match(homeHtml, /НОВОСТИ SGCB/);
+  assert.match(homeHtml, /Наши партнёры/);
+  assert.match(homeHtml, /href="\/\?tab=new#catalog"/);
+  assert.match(homeHtml, /href="\/\?tab=sale#catalog"/);
   assert.doesNotMatch(homeHtml, /<div[^>]+id=["']root["']/i, "SSR не должен отдавать пустой React-root");
+  const searchResult = await request(baseUrl, jar, `/search?q=${encodeURIComponent(product.shortName)}`);
+  assert.equal(searchResult.status, 200);
+  assert.match(await searchResult.text(), new RegExp(product.name));
+  assert.match(await (await request(baseUrl, jar, "/contacts")).text(), /ТЦ «Черёмушки»/);
+  assert.equal((await request(baseUrl, jar, "/partners")).status, 200);
 
   for (const seoCategory of categories) {
     const seoPage = await request(baseUrl, jar, `/catalog/${seoCategory.slug}`);
@@ -102,6 +112,7 @@ test("регистрация, сессия, лайки, комментарии, 
     if (repeatedOrder) await prisma.order.deleteMany({ where: { id: repeatedOrder.id } });
     if (createdOrder) await prisma.product.update({ where: { id: product.id }, data: { stock: { increment: repeatedOrder ? 4 : 2 } } });
     if (createdArticle) await prisma.article.deleteMany({ where: { id: createdArticle.id } });
+    if (createdPartner) await prisma.partner.deleteMany({ where: { id: createdPartner.id } });
     if (createdProduct) await prisma.product.deleteMany({ where: { id: createdProduct.id } });
     if (createdCategory) await prisma.category.deleteMany({ where: { id: createdCategory.id } });
     if (uploadedFile) await unlink(path.resolve(`public${uploadedFile}`)).catch(() => {});
@@ -319,7 +330,7 @@ test("регистрация, сессия, лайки, комментарии, 
 
   const updateProduct = await request(baseUrl, jar, `/admin/products/${createdProduct.id}`, {
     method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ _csrf: csrf, name: "Тестовый товар обновлён", shortName: "Товар", slug: testProductSlug, brand: "SGCB", sku: `TEST-${unique}`, price: "4321", stock: "3", categoryId: category.id, images: ["/assets/drying-towel.png", uploadedFile, "/assets/detailing-bucket.png"].join("\n"), description: "Новое описание", specs: "Цвет: Красный", published: "on" }),
+    body: new URLSearchParams({ _csrf: csrf, name: "Тестовый товар обновлён", shortName: "Товар", slug: testProductSlug, brand: "SGCB", sku: `TEST-${unique}`, price: "4321", stock: "3", categoryId: category.id, images: ["/assets/drying-towel.png", uploadedFile, "/assets/detailing-bucket.png"].join("\n"), description: "Первый абзац с подробным описанием товара, его особенностей и применения в профессиональном уходе за автомобилем. Этот текст достаточно длинный для краткого снипета.\n\nВторой абзац с рекомендациями по использованию.", specs: "Цвет: Красный", published: "on", isPromotion: "on" }),
   });
   assert.equal(updateProduct.status, 302);
   createdProduct = await prisma.product.findUnique({ where: { id: createdProduct.id } });
@@ -327,13 +338,30 @@ test("регистрация, сессия, лайки, комментарии, 
   assert.deepEqual(createdProduct.images, ["/assets/drying-towel.png", uploadedFile, "/assets/detailing-bucket.png"]);
   assert.equal(createdProduct.categoryId, category.id, "товар можно перенести в другую категорию");
   assert.equal(Number(createdProduct.price), 4321);
-  assert.equal(createdProduct.description, "Новое описание");
+  assert.equal(createdProduct.isPromotion, true);
+  assert.match(createdProduct.description, /\n\nВторой абзац/);
+  const promotedHome = await request(baseUrl, jar, "/?tab=sale");
+  assert.match(await promotedHome.text(), /Тестовый товар обновлён/);
+  const newHome = await request(baseUrl, jar, "/?tab=new");
+  assert.match(await newHome.text(), /Тестовый товар обновлён/);
+  const updatedProductPage = await request(baseUrl, jar, `/product/${testProductSlug}`);
+  const updatedProductHtml = await updatedProductPage.text();
+  assert.match(updatedProductHtml, /<p>Второй абзац с рекомендациями по использованию\.<\/p>/);
+  assert.equal((updatedProductHtml.match(/<p>Второй абзац с рекомендациями по использованию\.<\/p>/g) || []).length, 1, "описание видно один раз");
+
+  const partnerPage = await request(baseUrl, jar, "/admin/partners");
+  assert.equal(partnerPage.status, 200);
+  const createPartner = await request(baseUrl, jar, "/admin/partners", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ _csrf: csrf, name: "Тестовый партнёр", logo: uploadedFile, url: "https://example.com", description: "Описание партнёра", published: "on" }) });
+  assert.equal(createPartner.status, 302);
+  createdPartner = await prisma.partner.findFirst({ where: { name: "Тестовый партнёр" } });
+  assert.ok(createdPartner);
+  assert.match(await (await request(baseUrl, jar, "/partners")).text(), /Тестовый партнёр/);
 
   const blogSlug = `test-blog-${unique}`;
   const newsSlug = `test-news-${unique}`;
   const createBlog = await request(baseUrl, jar, "/admin/articles", {
     method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ _csrf: csrf, type: "BLOG", productId: createdProduct.id, title: "Тестовая статья", slug: blogSlug, description: "Описание статьи", heroImage: uploadedFile, body: "Первый раздел\nТекст для блога.", published: "on" }),
+    body: new URLSearchParams({ _csrf: csrf, type: "BLOG", productId: createdProduct.id, title: "Тестовая статья", slug: blogSlug, description: "Описание статьи", heroImage: uploadedFile, body: "Первый раздел\nТекст для блога.\n\nДополнительный абзац блога.", published: "on" }),
   });
   assert.equal(createBlog.status, 302);
   createdArticle = await prisma.article.findUnique({ where: { slug: blogSlug } });
@@ -341,7 +369,9 @@ test("регистрация, сессия, лайки, комментарии, 
   assert.equal((await request(baseUrl, jar, `/admin/articles/${createdArticle.id}/edit`)).status, 200);
   const blogPage = await request(baseUrl, jar, `/blog/${blogSlug}`);
   assert.equal(blogPage.status, 200);
-  assert.match(await blogPage.text(), /Текст для блога/);
+  const blogHtml = await blogPage.text();
+  assert.match(blogHtml, /<p>Дополнительный абзац блога\.<\/p>/);
+  assert.doesNotMatch(blogHtml, /Второй абзац с рекомендациями по использованию/, "врезка товара должна показывать короткий снипет");
 
   const updateNews = await request(baseUrl, jar, `/admin/articles/${createdArticle.id}`, {
     method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },

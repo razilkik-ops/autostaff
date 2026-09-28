@@ -24,9 +24,10 @@
       <p class="admin-photo-note">JPEG, PNG или WebP до 5 МБ. Ссылки можно вставлять вместо загрузки.</p>
       <p class="admin-photo-message" data-photo-message role="status" aria-live="polite"></p>
     </div>
-    <label class="wide">Описание<textarea name="description" required rows="5"><%= product?.description || '' %></textarea></label>
+    <label class="wide">Описание <small>Для нового абзаца оставьте пустую строку. Текст появится один раз в разделе «О товаре».</small><textarea name="description" required rows="7"><%= product?.description || '' %></textarea></label>
     <label class="wide">Характеристики <small>Одна строка: Название: Значение</small><textarea name="specs" rows="7"><%= specsToText(product?.specs) %></textarea></label>
     <label class="check"><input name="published" type="checkbox" <%= product?.published ?? true ? 'checked' : '' %> /> Опубликовать</label>
+    <label class="check"><input name="isPromotion" type="checkbox" <%= product?.isPromotion ? 'checked' : '' %> /> Показывать во вкладке «Акции»</label>
   </div>
   <button class="admin-submit"><%= product?.id ? 'Сохранить изменения' : 'Создать товар' %></button>
 </form>

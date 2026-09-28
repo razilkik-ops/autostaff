@@ -8,6 +8,22 @@ const bool = (value) => value === "on" || value === "true" || value === true;
 const slug = (value) => slugify(cleanText(value, 180), { lower: true, strict: true, locale: "ru" });
 const validPrice = (value) => String(value ?? "").trim() !== "" && Number.isFinite(Number(value)) && Number(value) >= 0;
 const validStock = (value) => String(value ?? "").trim() !== "" && Number.isInteger(Number(value)) && Number(value) >= 0;
+const externalUrl = (value) => {
+  const url = cleanText(value, 500);
+  return /^https?:\/\/[^\s]+$/i.test(url) ? url : null;
+};
+
+function partnerData(body) {
+  const logo = cleanText(body.logo, 500);
+  return {
+    name: cleanText(body.name, 120),
+    logo: logo.startsWith("/assets/") || logo.startsWith("/uploads/") ? logo : externalUrl(logo),
+    url: externalUrl(body.url),
+    description: cleanText(body.description, 300) || null,
+    sortOrder: Number.parseInt(body.sortOrder, 10) || 0,
+    published: bool(body.published),
+  };
+}
 
 function articleData(body, userId, existing = null) {
   const published = bool(body.published);
@@ -40,6 +56,7 @@ function productData(body) {
     images,
     stock: Math.max(0, Number.parseInt(body.stock, 10) || 0),
     published: bool(body.published),
+    isPromotion: bool(body.isPromotion),
     specs: parseSpecs(body.specs),
     categoryId: body.categoryId,
   };
@@ -96,6 +113,30 @@ export function adminRoutes(db) {
   router.post("/admin/products/:id/delete", asyncHandler(async (req, res) => {
     await db.product.delete({ where: { id: req.params.id } });
     res.redirect("/admin/products?success=Товар удалён");
+  }));
+
+  router.get("/admin/partners", asyncHandler(async (req, res) => {
+    const partners = await db.partner.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
+    res.render("admin/partners", { title: "Партнёры — SGCB Admin", description: "Управление партнёрами", partners });
+  }));
+
+  router.post("/admin/partners", asyncHandler(async (req, res) => {
+    const data = partnerData(req.body);
+    if (!data.name) return res.redirect("/admin/partners?error=Укажите название партнёра");
+    await db.partner.create({ data });
+    res.redirect("/admin/partners?success=Партнёр добавлен");
+  }));
+
+  router.post("/admin/partners/:id", asyncHandler(async (req, res) => {
+    const data = partnerData(req.body);
+    if (!data.name) return res.redirect("/admin/partners?error=Укажите название партнёра");
+    await db.partner.update({ where: { id: req.params.id }, data });
+    res.redirect("/admin/partners?success=Партнёр обновлён");
+  }));
+
+  router.post("/admin/partners/:id/delete", asyncHandler(async (req, res) => {
+    await db.partner.delete({ where: { id: req.params.id } });
+    res.redirect("/admin/partners?success=Партнёр удалён");
   }));
 
   router.get("/admin/categories", asyncHandler(async (req, res) => {

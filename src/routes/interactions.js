@@ -45,7 +45,7 @@ export function interactionRoutes(db, config) {
       const address = await db.address.findFirst({ where: { id: String(req.body.addressId), userId: req.user.id } });
       if (!address) return res.status(422).json({ error: "Выберите свой сохранённый адрес." });
       delivery = cleanText(`Доставка: ${addressLine(address)}`, 250);
-    } else if (delivery === "Доставка по России") {
+    } else if (delivery === "Доставка по России" || delivery === "Доставка по Беларуси") {
       const deliveryAddress = cleanText(req.body.deliveryAddress, 220);
       if (deliveryAddress.length < 8) return res.status(422).json({ error: "Укажите адрес доставки или выберите сохранённый адрес." });
       delivery = `Доставка: ${deliveryAddress}`;

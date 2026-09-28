@@ -1,10 +1,10 @@
 <footer id="contacts">
   <div class="footer-main">
     <div class="layout-container footer-main-inner">
-      <div class="footer-brand"><a class="brand" href="/"><span class="brand-mark">S</span><span><b>SGCB<span> PRO</span></b><small>PROFESSIONAL DETAILING</small></span></a><p>Профессиональная автохимия, оборудование и аксессуары SGCB для детейлинг-центров, автомоек и частных мастеров.</p></div>
+      <div class="footer-brand"><a class="brand" href="/"><span class="brand-mark">S</span><span><b>SGCB</b><small>CAR CARE PRODUCTS</small></span></a><p>Профессиональная автохимия, оборудование и аксессуары SGCB для детейлинг-центров, автомоек и частных мастеров.</p></div>
       <div><h3>Каталог</h3><a href="/#catalog">Автохимия</a><a href="/#catalog">Инструмент</a><a href="/#catalog">Аксессуары</a><a href="/#catalog">Оборудование</a><a href="/#catalog">Защитные плёнки</a></div>
-      <div><h3>Покупателю</h3><a href="/info/delivery">Доставка и оплата</a><a href="/info/questions">Вопросы</a><a href="/info/returns">Возврат и обмен</a><a href="/info/privacy">Политика конфиденциальности</a><a href="/info/about">О компании</a></div>
-      <div class="contacts"><h3>Контакты</h3><p>☎ <a href="tel:+79807519996">+7 980 751-99-96 · телефон / MAX</a></p><p>➤ <a href="https://t.me/CEO_ALLSTARS" target="_blank" rel="noreferrer">Telegram: @CEO_ALLSTARS</a></p><p>✉ <a href="mailto:allstars-import@yandex.ru">allstars-import@yandex.ru</a></p><p>● г. Владимир, пр-т Строителей, 9Б</p><p>◷ Ежедневно: 10:00–21:00</p></div>
+      <div><h3>Покупателю</h3><a href="/info/delivery">Доставка и оплата</a><a href="/info/questions">Вопросы</a><a href="/info/returns">Возврат и обмен</a><a href="/partners">Наши партнёры</a><a href="/info/privacy">Политика конфиденциальности</a><a href="/info/about">О компании</a></div>
+      <div class="contacts"><h3><a href="/contacts">Контакты</a></h3><p>☎ <a href="tel:+79807519996">+7 980 751-99-96</a></p><p>➤ <a href="https://t.me/CEO_ALLSTARS" target="_blank" rel="noopener noreferrer">Telegram: @CEO_ALLSTARS</a></p><p>◉ <a href="https://wa.me/79807519996" target="_blank" rel="noopener noreferrer">WhatsApp: +7 980 751-99-96</a></p><p>✉ <a href="mailto:allstars-import@yandex.ru">allstars-import@yandex.ru</a></p><p>● <a href="/contacts">г. Владимир, ТЦ «Черёмушки», пр-т Строителей, 9Б</a></p><p>◷ Ежедневно: 10:00–21:00</p></div>
     </div>
   </div>
   <div class="footer-bottom"><div class="layout-container footer-bottom-inner"><span>© 2026 SGCB Russia. Все права защищены.</span><a href="/info/privacy">Политика конфиденциальности</a></div></div>
@@ -28,7 +28,7 @@
       <label>Ваше имя<input name="customerName" required maxlength="80" value="<%= user?.name || '' %>" placeholder="Алексей" /></label>
       <label>Телефон<input name="phone" type="tel" required maxlength="32" value="<%= user?.phone || '' %>" placeholder="+7 900 000-00-00" /></label>
       <label>E-mail<input name="email" type="email" required maxlength="254" value="<%= user?.email || '' %>" placeholder="mail@example.ru" /></label>
-      <label>Способ получения<select name="delivery"><option>Доставка по России</option><option>Самовывоз во Владимире</option></select></label>
+      <label>Способ получения<select name="delivery"><option>Доставка по России</option><option>Доставка по Беларуси</option><option>Самовывоз во Владимире</option></select></label>
       <% if (user) { %><label data-checkout-address-label>Сохранённый адрес<select name="addressId" data-checkout-address><option value="">Выбрать адрес или уточнить в комментарии</option></select></label><% } %>
       <label data-checkout-address-input>Адрес доставки<input name="deliveryAddress" autocomplete="street-address" maxlength="220" placeholder="Город, улица, дом, квартира" /></label>
       <label>Комментарий<textarea name="comment" maxlength="600" placeholder="Детали заказа"></textarea></label>
@@ -38,6 +38,6 @@
   </section>
 </div>
 <div class="toast hidden" data-toast></div>
-<script src="/js/app.js?v=20260925-orders" defer></script>
+<script src="/js/app.js?v=20260928-menu" defer></script>
 </body>
 </html>

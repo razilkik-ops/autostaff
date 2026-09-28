@@ -1,35 +1,11 @@
 <div class="site-header">
-<div class="benefit-bar">
-  <div class="layout-container benefit-bar-inner">
-    <div class="benefit"><img src="/assets/benefit-delivery.png" alt="" /><span>Быстрая доставка по всей России</span></div>
-    <div class="benefit"><img src="/assets/benefit-verified.png" alt="" /><span>Только проверенные бренды</span></div>
-    <div class="benefit"><img src="/assets/benefit-support.png" alt="" /><span>Поддержка и консультации</span></div>
-    <span class="location">● Россия</span>
-  </div>
-</div>
-<header class="header">
-  <div class="layout-container header-inner">
-    <a class="brand" href="/" aria-label="SGCB — на главную">
-      <span class="brand-mark">S</span>
-      <span><b>SGCB<span> PRO</span></b><small>PROFESSIONAL DETAILING</small></span>
-    </a>
-    <nav aria-label="Основная навигация">
-      <a href="/#catalog">Каталог</a>
-      <a href="/#categories">Категории</a>
-      <a href="/blog">Блог</a>
-      <a href="/news">Новости</a>
-      <a href="/#contacts">Контакты</a>
-    </nav>
-    <div class="header-actions">
-      <% if (user) { %>
-        <% if (user.role === 'ADMIN') { %><a class="account-link admin-link" href="/admin">Админ</a><% } %>
-        <a class="account-name" href="/account" aria-label="Личный кабинет"><%= user.name %></a>
-        <form action="/logout" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>" /><button class="logout-link">Выйти</button></form>
-      <% } else { %>
-        <a class="account-link" href="/login">Войти</a>
-      <% } %>
-      <button class="cart-action" type="button" data-cart-open aria-label="Открыть корзину"><img src="/assets/process-cart.png" alt="" /><span data-cart-count>0</span></button>
-    </div>
-  </div>
-</header>
+  <div class="benefit-bar"><div class="layout-container benefit-bar-inner"><div class="benefit"><img src="/assets/benefit-delivery.png" alt="" /><span>Доставка по России и Беларуси</span></div><div class="benefit"><img src="/assets/benefit-verified.png" alt="" /><span>Только проверенные бренды</span></div><div class="benefit"><img src="/assets/benefit-support.png" alt="" /><span>Поддержка и консультации</span></div><span class="location">● Владимир</span></div></div>
+  <header class="header"><div class="layout-container header-inner">
+    <button class="mobile-menu-toggle" type="button" data-menu-toggle aria-controls="mobile-menu" aria-expanded="false" aria-label="Открыть меню">M</button>
+    <a class="brand" href="/" aria-label="SGCB — на главную"><span class="brand-mark">S</span><span><b>SGCB</b><small>CAR CARE PRODUCTS</small></span></a>
+    <nav class="desktop-nav" aria-label="Основная навигация"><a href="/#catalog">Каталог</a><a href="/blog">Блог</a><a href="/news">Новости</a><a href="/partners">Наши партнёры</a><a href="/contacts">Контакты</a></nav>
+    <div class="header-actions"><% if (user) { %><% if (user.role === 'ADMIN') { %><a class="account-link admin-link" href="/admin">Админ</a><% } %><a class="account-name" href="/account" aria-label="Личный кабинет"><%= user.name %></a><form action="/logout" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>" /><button class="logout-link">Выйти</button></form><% } else { %><a class="account-link" href="/login">Войти</a><% } %><button class="cart-action" type="button" data-cart-open aria-label="Открыть корзину"><img src="/assets/process-cart.png" alt="" /><span data-cart-count>0</span></button></div>
+  </div></header>
+  <div class="search-bar"><div class="layout-container"><form role="search" action="/search" method="get"><label for="site-search">Поиск по каталогу</label><input id="site-search" name="q" type="search" maxlength="100" value="<%= typeof searchTerm !== 'undefined' ? searchTerm : '' %>" placeholder="Поиск товаров SGCB" /><button type="submit" aria-label="Искать">Найти</button></form></div></div>
+  <nav class="mobile-menu" id="mobile-menu" aria-label="Мобильная навигация" data-mobile-menu hidden><a href="/#catalog">Каталог</a><a href="/blog">Блог</a><a href="/news">Новости</a><a href="/partners">Наши партнёры</a><a href="/contacts">Контакты</a></nav>
 </div>

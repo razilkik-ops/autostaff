@@ -12,6 +12,24 @@ try {
 const money = (value) => `${new Intl.NumberFormat("ru-RU").format(Number(value))} ₽`;
 const cartOverlay = document.querySelector("[data-cart-overlay]");
 const checkoutOverlay = document.querySelector("[data-checkout-overlay]");
+const menuToggle = document.querySelector("[data-menu-toggle]");
+const mobileMenu = document.querySelector("[data-mobile-menu]");
+
+function closeMobileMenu() {
+  if (!menuToggle || !mobileMenu) return;
+  mobileMenu.hidden = true;
+  menuToggle.setAttribute("aria-expanded", "false");
+  menuToggle.setAttribute("aria-label", "Открыть меню");
+}
+
+menuToggle?.addEventListener("click", () => {
+  const shouldOpen = mobileMenu.hidden;
+  mobileMenu.hidden = !shouldOpen;
+  menuToggle.setAttribute("aria-expanded", String(shouldOpen));
+  menuToggle.setAttribute("aria-label", shouldOpen ? "Закрыть меню" : "Открыть меню");
+});
+
+mobileMenu?.addEventListener("click", (event) => { if (event.target.closest("a")) closeMobileMenu(); });
 
 function persistCart() {
   localStorage.setItem(cartKey, JSON.stringify(cart));
@@ -92,6 +110,7 @@ function updateQuantity(productId, quantity) {
 }
 
 document.addEventListener("click", (event) => {
+  if (mobileMenu && !mobileMenu.hidden && !event.target.closest("[data-menu-toggle], [data-mobile-menu]")) closeMobileMenu();
   const add = event.target.closest(".add-to-cart");
   if (add) {
     const product = { productId: add.dataset.productId, name: add.dataset.productName, price: Number(add.dataset.productPrice), image: add.dataset.productImage, quantity: 1 };
@@ -124,7 +143,7 @@ async function loadCheckoutAddresses() {
 function syncDeliveryAddress() {
   const form = document.querySelector("[data-checkout-form]");
   if (!form) return;
-  const shipping = form.querySelector('[name="delivery"]')?.value === "Доставка по России";
+  const shipping = form.querySelector('[name="delivery"]')?.value.startsWith("Доставка по");
   const selected = Boolean(form.querySelector('[name="addressId"]')?.value);
   const label = form.querySelector("[data-checkout-address-input]");
   const input = form.querySelector('[name="deliveryAddress"]');
@@ -145,7 +164,7 @@ document.querySelector("[data-checkout-address]")?.addEventListener("change", sy
 syncDeliveryAddress();
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") { cartOverlay?.classList.add("hidden"); checkoutOverlay?.classList.add("hidden"); }
+  if (event.key === "Escape") { cartOverlay?.classList.add("hidden"); checkoutOverlay?.classList.add("hidden"); closeMobileMenu(); }
 });
 
 document.querySelector("[data-checkout-form]")?.addEventListener("submit", async (event) => {

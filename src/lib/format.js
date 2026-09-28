@@ -20,6 +20,13 @@ export function paragraphs(value) {
   return String(value || "").split(/\n\s*\n/).map((item) => item.trim()).filter(Boolean);
 }
 
+export function excerpt(value, maxLength = 130) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (text.length <= maxLength) return text;
+  const cut = text.slice(0, maxLength + 1);
+  return `${cut.slice(0, cut.lastIndexOf(" ") > maxLength * 0.6 ? cut.lastIndexOf(" ") : maxLength).trimEnd()}…`;
+}
+
 export function cleanText(value, maxLength = 500) {
   return String(value ?? "").trim().slice(0, maxLength);
 }
