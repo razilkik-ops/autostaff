@@ -32,7 +32,7 @@ export function createApp({ db, config = defaultConfig }) {
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:"],
-        frameSrc: ["'self'", "https://www.youtube.com", "https://www.youtube-nocookie.com", "https://www.openstreetmap.org"],
+        frameSrc: ["'self'", "https://www.youtube.com", "https://www.youtube-nocookie.com", "https://yandex.ru"],
         connectSrc: ["'self'"],
       },
     },
