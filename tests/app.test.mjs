@@ -69,6 +69,8 @@ test("регистрация, сессия, лайки, комментарии, 
   assert.match(homeHtml, new RegExp(product.name));
   assert.match(homeHtml, /НОВОСТИ SGCB/);
   assert.match(homeHtml, /Наши партнёры/);
+  assert.match(homeHtml, /Официальный дистрибьютор/);
+  assert.match(homeHtml, /SGCB_Russia_Official_Distributor_Detailing_Carwash_PPF_Wrapping\.jpg/);
   assert.match(homeHtml, /href="\/\?tab=new#catalog"/);
   assert.match(homeHtml, /href="\/\?tab=sale#catalog"/);
   assert.doesNotMatch(homeHtml, /<div[^>]+id=["']root["']/i, "SSR не должен отдавать пустой React-root");
@@ -102,6 +104,12 @@ test("регистрация, сессия, лайки, комментарии, 
   assert.match(productHtml, /Характеристики/);
   assert.match(productHtml, /С этим товаром покупают/);
   assert.match(productHtml, /Доставка по России/);
+  const initialMeta = productHtml.match(/<meta name="description" content="([^"]*)"/);
+  const initialOg = productHtml.match(/<meta property="og:description" content="([^"]*)"/);
+  assert.ok(initialMeta && initialOg);
+  assert.equal(initialMeta[1], initialOg[1]);
+  assert.ok(initialMeta[1].length <= 160);
+  assert.notEqual(initialMeta[1], product.description);
 
   t.after(async () => {
     await prisma.like.deleteMany({ where: { user: { email } } });
@@ -315,7 +323,7 @@ test("регистрация, сессия, лайки, комментарии, 
   const testProductSlug = `test-product-${unique}`;
   const createProduct = await request(baseUrl, jar, "/admin/products", {
     method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ _csrf: csrf, name: "Тестовый товар", shortName: "Товар", slug: testProductSlug, brand: "SGCB", sku: `TEST-${unique}`, price: "1234", stock: "3", categoryId: createdCategory.id, images: [uploadedFile, "/assets/detailing-bucket.png", "/assets/drying-towel.png"].join("\n"), description: "Первое описание", specs: "Цвет: Синий", published: "on" }),
+    body: new URLSearchParams({ _csrf: csrf, name: "Тестовый товар", shortName: "Товар", slug: testProductSlug, brand: "SGCB", sku: `TEST-${unique}`, price: "1234", stock: "3", categoryId: createdCategory.id, images: [uploadedFile, "/assets/detailing-bucket.png", "/assets/drying-towel.png"].join("\n"), description: "Первое описание", seoDescription: "Короткое описание тестового товара для поисковой выдачи.", specs: "Цвет: Синий", published: "on" }),
   });
   assert.equal(createProduct.status, 302);
   createdProduct = await prisma.product.findUnique({ where: { slug: testProductSlug } });
@@ -323,14 +331,18 @@ test("регистрация, сессия, лайки, комментарии, 
   assert.equal(createdProduct.image, uploadedFile);
   assert.deepEqual(createdProduct.images, [uploadedFile, "/assets/detailing-bucket.png", "/assets/drying-towel.png"]);
   assert.equal(createdProduct.categoryId, createdCategory.id);
+  assert.equal(createdProduct.seoDescription, "Короткое описание тестового товара для поисковой выдачи.");
   const newProductPage = await request(baseUrl, jar, `/product/${testProductSlug}`);
   assert.equal(newProductPage.status, 200);
-  assert.match(await newProductPage.text(), new RegExp(`data-gallery-main[^>]+src="${uploadedFile}"|src="${uploadedFile}"[^>]+data-gallery-main`));
+  const newProductHtml = await newProductPage.text();
+  assert.match(newProductHtml, new RegExp(`data-gallery-main[^>]+src="${uploadedFile}"|src="${uploadedFile}"[^>]+data-gallery-main`));
+  assert.match(newProductHtml, /<meta name="description" content="Короткое описание тестового товара для поисковой выдачи\."/);
+  assert.match(newProductHtml, /<meta property="og:description" content="Короткое описание тестового товара для поисковой выдачи\."/);
   assert.equal((await request(baseUrl, jar, `/admin/products/${createdProduct.id}/edit`)).status, 200);
 
   const updateProduct = await request(baseUrl, jar, `/admin/products/${createdProduct.id}`, {
     method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ _csrf: csrf, name: "Тестовый товар обновлён", shortName: "Товар", slug: testProductSlug, brand: "SGCB", sku: `TEST-${unique}`, price: "4321", stock: "3", categoryId: category.id, images: ["/assets/drying-towel.png", uploadedFile, "/assets/detailing-bucket.png"].join("\n"), description: "Первый абзац с подробным описанием товара, его особенностей и применения в профессиональном уходе за автомобилем. Этот текст достаточно длинный для краткого снипета.\n\nВторой абзац с рекомендациями по использованию.", specs: "Цвет: Красный", published: "on", isPromotion: "on" }),
+    body: new URLSearchParams({ _csrf: csrf, name: "Тестовый товар обновлён", shortName: "Товар", slug: testProductSlug, brand: "SGCB", sku: `TEST-${unique}`, price: "4321", stock: "3", categoryId: category.id, images: ["/assets/drying-towel.png", uploadedFile, "/assets/detailing-bucket.png"].join("\n"), description: "Первый абзац с подробным описанием товара, его особенностей и применения в профессиональном уходе за автомобилем. Этот текст достаточно длинный для краткого снипета.\n\nВторой абзац с рекомендациями по использованию.", seoDescription: "Обновлённый краткий SEO-текст о профессиональном товаре.", specs: "Цвет: Красный", published: "on", isPromotion: "on" }),
   });
   assert.equal(updateProduct.status, 302);
   createdProduct = await prisma.product.findUnique({ where: { id: createdProduct.id } });
@@ -340,6 +352,7 @@ test("регистрация, сессия, лайки, комментарии, 
   assert.equal(Number(createdProduct.price), 4321);
   assert.equal(createdProduct.isPromotion, true);
   assert.match(createdProduct.description, /\n\nВторой абзац/);
+  assert.equal(createdProduct.seoDescription, "Обновлённый краткий SEO-текст о профессиональном товаре.");
   const promotedHome = await request(baseUrl, jar, "/?tab=sale");
   assert.match(await promotedHome.text(), /Тестовый товар обновлён/);
   const newHome = await request(baseUrl, jar, "/?tab=new");
@@ -348,6 +361,8 @@ test("регистрация, сессия, лайки, комментарии, 
   const updatedProductHtml = await updatedProductPage.text();
   assert.match(updatedProductHtml, /<p>Второй абзац с рекомендациями по использованию\.<\/p>/);
   assert.equal((updatedProductHtml.match(/<p>Второй абзац с рекомендациями по использованию\.<\/p>/g) || []).length, 1, "описание видно один раз");
+  assert.match(updatedProductHtml, /<meta name="description" content="Обновлённый краткий SEO-текст о профессиональном товаре\."/);
+  assert.doesNotMatch(updatedProductHtml, /<meta name="description" content="Первый абзац/);
 
   const partnerPage = await request(baseUrl, jar, "/admin/partners");
   assert.equal(partnerPage.status, 200);

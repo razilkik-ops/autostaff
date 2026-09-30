@@ -27,6 +27,15 @@ export function excerpt(value, maxLength = 130) {
   return `${cut.slice(0, cut.lastIndexOf(" ") > maxLength * 0.6 ? cut.lastIndexOf(" ") : maxLength).trimEnd()}…`;
 }
 
+export function productSeoDescription(product) {
+  const fallback = `Купить ${product.shortName || product.name} в разделе «${product.category?.name || "Каталог"}». Профессиональные товары для детейлинга с доставкой по России и Беларуси.`;
+  const text = String(product.seoDescription || fallback).replace(/\s+/g, " ").trim();
+  if (text.length <= 160) return text;
+  const cut = text.slice(0, 160);
+  const wordEnd = cut.lastIndexOf(" ");
+  return (wordEnd > 120 ? cut.slice(0, wordEnd) : cut).trimEnd();
+}
+
 export function cleanText(value, maxLength = 500) {
   return String(value ?? "").trim().slice(0, maxLength);
 }

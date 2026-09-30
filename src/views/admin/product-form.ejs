@@ -25,6 +25,7 @@
       <p class="admin-photo-message" data-photo-message role="status" aria-live="polite"></p>
     </div>
     <label class="wide">Описание <small>Для нового абзаца оставьте пустую строку. Текст появится один раз в разделе «О товаре».</small><textarea name="description" required rows="7"><%= product?.description || '' %></textarea></label>
+    <label class="wide">Короткое SEO-описание <small>Отдельный текст для поисковиков и превью ссылки, до 160 символов. Если поле пустое, сайт составит короткое описание из названия и категории товара.</small><textarea name="seoDescription" maxlength="160" rows="2" placeholder="Например: Защитная плёнка PPF SGCB для оклейки кузова. Профессиональные материалы с доставкой по России и Беларуси."><%= product?.seoDescription || '' %></textarea></label>
     <label class="wide">Характеристики <small>Одна строка: Название: Значение</small><textarea name="specs" rows="7"><%= specsToText(product?.specs) %></textarea></label>
     <label class="check"><input name="published" type="checkbox" <%= product?.published ?? true ? 'checked' : '' %> /> Опубликовать</label>
     <label class="check"><input name="isPromotion" type="checkbox" <%= product?.isPromotion ? 'checked' : '' %> /> Показывать во вкладке «Акции»</label>

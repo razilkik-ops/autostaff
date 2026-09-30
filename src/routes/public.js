@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { asyncHandler } from "../lib/async-handler.js";
+import { productSeoDescription } from "../lib/format.js";
 
 const infoPages = {
   delivery: ["Доставка и оплата", "Отправляем заказы по России и Беларуси транспортными компаниями и курьерскими службами. Стоимость и срок рассчитываются менеджером после подтверждения заказа. Доступны онлайн-оплата и безналичный расчёт для организаций."],
@@ -74,7 +75,7 @@ export function publicRoutes(db) {
     ]);
     const favoriteIds = new Set(favorites.map((item) => item.productId));
     const averageRating = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : null;
-    res.render("product", { title: `${product.name} — купить SGCB`, description: product.description, product, related, gallery, reviews, averageRating, favoriteIds });
+    res.render("product", { title: `${product.name} — купить SGCB`, description: productSeoDescription(product), product, related, gallery, reviews, averageRating, favoriteIds });
   }));
 
   for (const [path, type, heading, lead] of [

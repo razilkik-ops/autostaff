@@ -51,6 +51,7 @@ function productData(body) {
     brand: cleanText(body.brand, 80) || "SGCB",
     sku: cleanText(body.sku, 80).toUpperCase(),
     description: cleanText(body.description, 3000),
+    seoDescription: cleanText(body.seoDescription, 160).replace(/\s+/g, " ") || null,
     price: Math.max(0, Number(body.price) || 0),
     image: images[0] || "",
     images,
