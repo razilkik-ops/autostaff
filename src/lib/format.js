@@ -28,7 +28,7 @@ export function excerpt(value, maxLength = 130) {
 }
 
 export function productSeoDescription(product) {
-  const fallback = `Купить ${product.shortName || product.name} в разделе «${product.category?.name || "Каталог"}». Профессиональные товары для детейлинга с доставкой по России и Беларуси.`;
+  const fallback = `${product.name} — профессиональный товар SGCB в категории «${product.category?.name || "Каталог"}». Для детейлинг-центров и мастеров, доставка по России и Беларуси.`;
   const text = String(product.seoDescription || fallback).replace(/\s+/g, " ").trim();
   if (text.length <= 160) return text;
   const cut = text.slice(0, 160);
